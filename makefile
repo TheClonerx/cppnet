@@ -25,11 +25,11 @@ LIB_SHARE=$(LIBDIR)/lib$(LIBNAME).so
 
 TESTS=$(patsubst $(SRCDIR)/tests/%,$(BINDIR)/tests/%,$(basename $(TEST_SOURCES)))
 
-all: share static tests
+all: share tests # static
 
 share: $(LIB_SHARE) $(LIB_INCLUDES)
 
-static: $(LIB_STATIC) $(LIB_INCLUDES)
+# static: $(LIB_STATIC) $(LIB_INCLUDES)
 
 tests: $(TESTS)
 	
@@ -40,13 +40,13 @@ install: share static
 	$(if $(INSTALL_DIR),,$(error INSTALL_DIR is undefined))
 	
 
-$(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_STATIC)
+$(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_SHARE)
 	@mkdir -pv $(dir $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -l$(LIBNAME) -lpthread -o $@ $<
 
-$(LIB_STATIC): $(LIB_OBJECTS)
-	@mkdir -pv $(dir $@)
-	ar rs $(LIB_STATIC) $?
+# $(LIB_STATIC): $(LIB_OBJECTS)
+# 	@mkdir -pv $(dir $@)
+# 	ar rs $(LIB_STATIC) $?
 
 $(LIB_SHARE): $(LIB_OBJECTS) 
 	@mkdir -pv $(dir $@)
