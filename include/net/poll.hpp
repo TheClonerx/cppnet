@@ -8,8 +8,6 @@
 // they may need some constats defined here
 #include <poll.h>
 
-struct pollfd;
-
 namespace net {
 class poll {
 public:
@@ -17,8 +15,14 @@ public:
     bool modify(int fd, short eventmask);
     bool unregister(int fd);
 
-    size_t execute(std::chrono::milliseconds timeout);
+    size_t execute(std::chrono::milliseconds);
     size_t execute(std::chrono::milliseconds, std::error_code&) noexcept;
+
+#ifdef _GNU_SOURCE
+    // for ppoll
+    size_t execute(std::chrono::nanoseconds, const sigset_t&);
+    size_t execute(std::chrono::nanoseconds, const sigset_t&, std::error_code&) noexcept;
+#endif
 
     template <typename It>
     void get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
@@ -46,6 +50,6 @@ public:
     }
 
 private:
-    std::vector<::pollfd> fds;
+    std::vector<pollfd> fds;
 };
 } // net

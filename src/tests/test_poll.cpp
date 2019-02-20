@@ -5,15 +5,16 @@
     your terminal maybe has line buffering
 */
 
+using namespace std::literals;
+
 int main()
 {
     net::poll poll;
     poll.add(0, POLLIN);
     std::cout << "Now polling stdin...\n";
-    size_t polled = poll.execute(std::chrono::milliseconds(5000));
+    size_t polled = poll.execute(5000ms);
     if (!polled)
         std::cout << "Timeout reached!\n";
-    else {
+    else
         std::cout << "Polled!\n";
-    }
 }

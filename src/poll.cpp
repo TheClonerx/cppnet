@@ -61,10 +61,42 @@ size_t net::poll::execute(std::chrono::milliseconds timeout, std::error_code& e)
 {
     for (pollfd& fd : fds)
         fd.revents = 0;
-    int ret = ::poll(fds.data(), fds.size(), timeout.count());
-    if (ret < 0) {
+    int ret = ::poll(
+        fds.data(),
+        fds.size(),
+        std::chrono::duration_cast<std::chrono::duration<int, std::milli>>(timeout).count());
+    if (ret < 0)
         e.assign(errno, std::system_category());
-        return -1;
-    }
     return ret;
 }
+
+#ifdef _GNU_SOURCE
+size_t net::poll::execute(std::chrono::nanoseconds timeout, const sigset_t& sigmask)
+{
+    timespec tm;
+    tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout).count();
+    tm.tv_nsec = timeout.count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+    for (pollfd& fd : fds)
+        fd.revents = 0;
+
+    int ret = ::ppoll(fds.data(), fds.size(), &tm, &sigmask);
+    if (ret < 0)
+        throw std::system_error(errno, std::system_category());
+    return ret;
+}
+
+size_t net::poll::execute(std::chrono::nanoseconds timeout, const sigset_t& sigmask, std::error_code& e) noexcept
+{
+    timespec tm;
+    tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout).count();
+    tm.tv_nsec = timeout.count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+    
+    for (pollfd& fd : fds)
+        fd.revents = 0;
+
+    int ret = ::ppoll(fds.data(), fds.size(), &tm, &sigmask);
+    if (ret < 0)
+        e.assign(errno, std::system_category());
+    return ret;
+}
+#endif
