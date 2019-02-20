@@ -71,30 +71,35 @@ size_t net::poll::execute(std::chrono::milliseconds timeout, std::error_code& e)
 }
 
 #ifdef _GNU_SOURCE
-size_t net::poll::execute(std::chrono::nanoseconds timeout, const sigset_t& sigmask)
+size_t net::poll::execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask)
 {
     timespec tm;
-    tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout).count();
-    tm.tv_nsec = timeout.count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+    if (timeout.has_value()) {
+        tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout.value()).count();
+        tm.tv_nsec = timeout.value().count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+    }
+    
     for (pollfd& fd : fds)
         fd.revents = 0;
 
-    int ret = ::ppoll(fds.data(), fds.size(), &tm, &sigmask);
+    int ret = ::ppoll(fds.data(), fds.size(), timeout.has_value() ? &tm : nullptr, &sigmask);
     if (ret < 0)
         throw std::system_error(errno, std::system_category());
     return ret;
 }
 
-size_t net::poll::execute(std::chrono::nanoseconds timeout, const sigset_t& sigmask, std::error_code& e) noexcept
+size_t net::poll::execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask, std::error_code& e) noexcept
 {
     timespec tm;
-    tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout).count();
-    tm.tv_nsec = timeout.count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
-    
+    if (timeout) {
+        tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(*timeout).count();
+        tm.tv_nsec = timeout->count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+    }
+
     for (pollfd& fd : fds)
         fd.revents = 0;
 
-    int ret = ::ppoll(fds.data(), fds.size(), &tm, &sigmask);
+    int ret = ::ppoll(fds.data(), fds.size(), timeout ? &tm : nullptr, &sigmask);
     if (ret < 0)
         e.assign(errno, std::system_category());
     return ret;

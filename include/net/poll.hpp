@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <optional>
 #include <system_error>
 #include <utility>
 #include <vector>
@@ -20,9 +21,11 @@ public:
 
 #ifdef _GNU_SOURCE
     // for ppoll
-    size_t execute(std::chrono::nanoseconds, const sigset_t&);
-    size_t execute(std::chrono::nanoseconds, const sigset_t&, std::error_code&) noexcept;
+    size_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&);
+    size_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&, std::error_code&) noexcept;
 #endif
+
+    // ranges
 
     template <typename It>
     void get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
@@ -36,6 +39,8 @@ public:
             }
         }
     }
+
+    // inserters
 
     template <typename It>
     void get(It start) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start))
