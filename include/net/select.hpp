@@ -7,7 +7,7 @@
 
 namespace net {
 class select {
-
+public:
     bool add_read(int);
     bool add_write(int);
     bool add_except(int);
