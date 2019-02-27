@@ -123,25 +123,25 @@ size_t net::socket::send(std::string_view b, int flags, std::error_code& e) noex
 void net::socket::connect(const char* addr, uint16_t port)
 {
     net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::connect(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen));
+    CHECK_FOR_THROW(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
 }
 
 void net::socket::connect(const char* addr, uint16_t port, std::error_code& e) noexcept
 {
     net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
-    CHECK_FOR_ASSIGN(::connect(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen), e);
+    CHECK_FOR_ASSIGN(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
 }
 
 void net::socket::connect(std::string_view addr, uint16_t port)
 {
     net::addrinfo ainfo = net::getaddrinfo(addr.data(), std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::connect(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen));
+    CHECK_FOR_THROW(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
 }
 
 void net::socket::connect(std::string_view addr, uint16_t port, std::error_code& e) noexcept
 {
     net::addrinfo ainfo = net::getaddrinfo(addr.data(), std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
-    CHECK_FOR_ASSIGN(::connect(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen), e);
+    CHECK_FOR_ASSIGN(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
 }
 
 net::socket net::socket::accept()
@@ -171,7 +171,7 @@ void net::socket::listen(int backlog, std::error_code& e) noexcept
 void net::socket::bind(const char* addr, uint16_t port)
 {
     net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::bind(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen));
+    CHECK_FOR_THROW(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
 }
 
 void net::socket::bind(const char* addr, uint16_t port, std::error_code& e) noexcept
@@ -179,13 +179,13 @@ void net::socket::bind(const char* addr, uint16_t port, std::error_code& e) noex
     net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
     if (e)
         return;
-    CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen), e);
+    CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
 }
 
 void net::socket::bind(std::string_view addr, uint16_t port)
 {
     net::addrinfo ainfo = net::getaddrinfo(addr.data(), std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::bind(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen));
+    CHECK_FOR_THROW(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
 }
 
 void net::socket::bind(std::string_view addr, uint16_t port, std::error_code& e) noexcept
@@ -193,7 +193,7 @@ void net::socket::bind(std::string_view addr, uint16_t port, std::error_code& e)
     net::addrinfo ainfo = net::getaddrinfo(addr.data(), std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
     if (e)
         return;
-    CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(ainfo.addr.get()), ainfo.addrlen), e);
+    CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
 }
 
 void net::socket::bind(net::any_addr_t, uint16_t port)

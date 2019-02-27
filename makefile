@@ -36,8 +36,9 @@ tests: $(TESTS)
 clean:
 	rm -f $(LIB_STATIC) $(LIB_SHARE) $(TESTS) $(LIB_OBJECTS) $(TEST_OBJECTS)
 
-install: share static 
+install: share # static
 	$(if $(INSTALL_DIR),,$(error INSTALL_DIR is undefined))
+	exit 1
 	
 
 $(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_SHARE)

@@ -17,7 +17,7 @@ struct addrinfo {
     int type;
     int protocol;
     socklen_t addrlen;
-    std::unique_ptr<::sockaddr_storage> addr;
+    sockaddr_storage addr;
     std::string canonname;
 };
 
@@ -43,13 +43,12 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
 
         e.assign(0, std::system_category());
 
-    std::unique_ptr<sockaddr_storage> tmp;
+    sockaddr_storage tmp;
 
     for (::addrinfo* i = addrlist; i != nullptr && start != stop; i = i->ai_next, ++start) {
-        tmp = std::make_unique<sockaddr_storage>();
         // man pages doe
-        std::copy(reinterpret_cast<char*>(i->ai_addr), reinterpret_cast<char*>(i->ai_addr) + i->ai_addrlen, reinterpret_cast<char*>(tmp.get()));
-        std::fill_n(reinterpret_cast<char*>(tmp.get()) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
+        std::copy(reinterpret_cast<char*>(i->ai_addr), reinterpret_cast<char*>(i->ai_addr) + i->ai_addrlen, reinterpret_cast<char*>(&tmp));
+        std::fill_n(reinterpret_cast<char*>(&tmp) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
         *start = addrinfo {
             i->ai_family,
             i->ai_socktype,
@@ -85,12 +84,11 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
         e.assign(0, std::system_category());
     }
 
-    std::unique_ptr<sockaddr_storage> tmp;
+    sockaddr_storage tmp;
 
     for (::addrinfo* i = addrlist; i != nullptr; i = i->ai_next, ++it) {
-        tmp = std::make_unique<sockaddr_storage>();
-        std::copy((char*)i->ai_addr, ((char*)i->ai_addr) + i->ai_addrlen, (char*)tmp.get());
-        std::fill_n(((char*)tmp.get()) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
+        std::copy(reinterpret_cast<char*>(i->ai_addr), reinterpret_cast<char*>(i->ai_addr) + i->ai_addrlen, reinterpret_cast<char*>(&tmp));
+        std::fill_n(reinterpret_cast<char*>(&tmp) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
         *it = addrinfo {
             i->ai_family,
             i->ai_socktype,
