@@ -2,64 +2,53 @@
 #include <chrono>
 #include <optional>
 #include <system_error>
-#include <tuple>
-#include <vector>
+#include <list>
 
 namespace net {
+
+struct select_return_t
+{
+    size_t reads, writes, exceptions;
+};
+
 class select {
 public:
-    bool add_read(int);
-    bool add_write(int);
-    bool add_except(int);
 
-    bool remove_read(int);
-    bool remove_write(int);
-    bool remove_except(int);
+    enum class EventFlags : unsigned
+    {
+        read = 1,
+        write = 2,
+        except = 4
+    };
 
-    std::tuple<size_t, size_t, size_t> execute(std::optional<std::chrono::microseconds>);
-    std::tuple<size_t, size_t, size_t> execute(std::optional<std::chrono::microseconds>, std::error_code&) noexcept;
+    bool add(int, EventFlags);
+    bool remove(int, EventFlags);
+
+    select_return_t execute(std::optional<std::chrono::microseconds>);
+    select_return_t execute(std::optional<std::chrono::microseconds>, std::error_code&) noexcept;
 
 #ifdef _GNU_SOURCE
-    std::tuple<size_t, size_t, size_t> execute(std::optional<std::chrono::nanoseconds>, const sigset_t&);
-    std::tuple<size_t, size_t, size_t> execute(std::optional<std::chrono::nanoseconds>, const sigset_t&, std::error_code&) noexcept;
+    select_return_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&);
+    select_return_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&, std::error_code&) noexcept;
 #endif
 
     // ranges
 
     template <typename It>
-    void get_read(It start, It end) const
+    void get(It start, It end, EventFlags events) const
     {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::READ && std::get<2>(t)) {
-                *start = std::get<0>(t);
-                ++start;
-                if (start == end)
-                    return;
-            }
-        }
-    }
 
-    template <typename It>
-    void get_write(It start, It end) const
-    {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::WRITE && std::get<2>(t)) {
-                *start = std::get<0>(t);
+        for (const auto& item : fdlist)
+        {
+            if (start == end) return;
+            if (
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read) ||
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write) ||
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except)
+            )
+            {
+                *start = item.fd;
                 ++start;
-                if (start == end)
-                    return;
-            }
-        }
-    }
-    template <typename It>
-    void get_except(It start, It end) const
-    {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::EXCEPT && std::get<2>(t)) {
-                *start = std::get<0>(t);
-                ++start;
-                if (start == end)
-                    return;
             }
         }
     }
@@ -67,42 +56,51 @@ public:
     // inserters
 
     template <typename It>
-    void get_read(It start) const
+    void get(It start, EventFlags events) const
     {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::READ && std::get<2>(t)) {
-                *start = std::get<0>(t);
-                ++start;
-            }
-        }
-    }
-    template <typename It>
-    void get_write(It start) const
-    {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::WRITE && std::get<2>(t)) {
-                *start = std::get<0>(t);
-                ++start;
-            }
-        }
-    }
-    template <typename It>
-    void get_except(It start) const
-    {
-        for (const auto& t : fdlist) {
-            if (std::get<1>(t) == Type::EXCEPT && std::get<2>(t)) {
-                *start = std::get<0>(t);
+        for (const auto& item : fdlist)
+        {
+            if (
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read) ||
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write) ||
+                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except)
+            )
+            {
+                *start = item.fd;
                 ++start;
             }
         }
     }
 
+
 private:
-    enum Type {
-        READ,
-        WRITE,
-        EXCEPT
-    };
-    std::vector<std::tuple<int, Type, bool>> fdlist;
+    struct Item
+    {
+        int fd;
+        EventFlags events; // events to select
+        EventFlags sevents; // selected events
+    }; 
+
+    std::list<Item> fdlist;
 };
+}
+
+inline net::select::EventFlags operator|(net::select::EventFlags lhs, net::select::EventFlags rhs)
+{
+    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) | static_cast<unsigned>(rhs));
+}
+
+inline net::select::EventFlags operator&(net::select::EventFlags lhs, net::select::EventFlags rhs)
+{
+    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) & static_cast<unsigned>(rhs));
+}
+
+inline net::select::EventFlags operator^(net::select::EventFlags lhs, net::select::EventFlags rhs)
+{
+    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) ^ static_cast<unsigned>(rhs));
+}
+
+inline bool operator!(net::select::EventFlags rhs)
+{
+    return !static_cast<unsigned>(rhs);
 }
