@@ -42,9 +42,9 @@ public:
         {
             if (start == end) return;
             if (
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read) ||
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write) ||
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except)
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) ||
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) ||
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))
             )
             {
                 *start = item.fd;
@@ -61,9 +61,9 @@ public:
         for (const auto& item : fdlist)
         {
             if (
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read) ||
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write) ||
-                static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except)
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) ||
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) ||
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))
             )
             {
                 *start = item.fd;

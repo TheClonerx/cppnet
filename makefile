@@ -9,8 +9,8 @@ BINDIR=bin
 
 LIBNAME=cppnet
 
-CXXFLAGS=-Wall -Wextra -fPIC -std=c++17 -O2 -DNDEBUG -I$(INCDIR) -L$(LIBDIR)
-LDFLAGS=-s
+CXXFLAGS=-Wall -Wextra -fPIC -std=c++17 -O2 -DNDEBUG -I$(INCDIR)
+LDFLAGS=-s -L$(LIBDIR)
 
 LIB_INCLUDES=$(shell find $(INCDIR)/net -type f)
 
@@ -57,4 +57,4 @@ $(LIB_SHARE): $(LIB_OBJECTS)
 
 $(OBJDIR)/%.o: $(SRCDIR)/% $(LIB_INCLUDES)
 	@mkdir -pv $(dir $@)
-	$(CXX) $(CXXFLAGS) $(LDFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
