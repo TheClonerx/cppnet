@@ -90,14 +90,14 @@ size_t net::socket::recv(void* buff, size_t size, int flags, std::error_code& e)
     return ret;
 }
 
-size_t net::socket::send(void* buff, size_t size, int flags)
+size_t net::socket::send(const void* buff, size_t size, int flags)
 {
     ssize_t r = ::send(fd, buff, size, flags);
     CHECK_FOR_THROW(r);
     return r;
 }
 
-size_t net::socket::send(void* buff, size_t size, int flags, std::error_code& e) noexcept
+size_t net::socket::send(const void* buff, size_t size, int flags, std::error_code& e) noexcept
 {
     ssize_t r = ::send(fd, buff, size, flags);
     CHECK_FOR_ASSIGN(r, e);
@@ -119,18 +119,6 @@ size_t net::socket::send(std::string_view b, int flags, std::error_code& e) noex
 }
 
 #include "net/getaddrinfo.hpp"
-
-void net::socket::connect(const char* addr, uint16_t port)
-{
-    net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
-}
-
-void net::socket::connect(const char* addr, uint16_t port, std::error_code& e) noexcept
-{
-    net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
-    CHECK_FOR_ASSIGN(::connect(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
-}
 
 void net::socket::connect(std::string_view addr, uint16_t port)
 {
@@ -158,6 +146,50 @@ net::socket net::socket::accept(std::error_code& e) noexcept
     return net::socket::from_fileno(r);
 }
 
+net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen)
+{
+    int r = ::accept(fd, &addr, &socklen);
+    CHECK_FOR_THROW(r);
+    return net::socket::from_fileno(r);
+}
+
+net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen, std::error_code& e) noexcept
+{
+    int r = ::accept(fd, &addr, &socklen);
+    CHECK_FOR_ASSIGN(r, e);
+    return net::socket::from_fileno(r);
+}
+
+#ifdef _GNU_SOURCE
+net::socket net::socket::accept(int flags)
+{
+    int r = ::accept4(fd, nullptr, nullptr, flags);
+    CHECK_FOR_THROW(r);
+    return net::socket::from_fileno(r);
+}
+
+net::socket net::socket::accept(int flags, std::error_code& e) noexcept
+{
+    int r = ::accept4(fd, nullptr, nullptr, flags);
+    CHECK_FOR_ASSIGN(r, e);
+    return net::socket::from_fileno(r);
+}
+
+net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen, int flags)
+{
+    int r = ::accept4(fd, &addr, &socklen, flags);
+    CHECK_FOR_THROW(r);
+    return net::socket::from_fileno(r);
+}
+
+net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen, int flags, std::error_code& e) noexcept
+{
+    int r = ::accept4(fd, &addr, &socklen, flags);
+    CHECK_FOR_ASSIGN(r, e);
+    return net::socket::from_fileno(r);
+}
+#endif
+
 void net::socket::listen(int backlog)
 {
     CHECK_FOR_THROW(::listen(fd, backlog));
@@ -166,20 +198,6 @@ void net::socket::listen(int backlog)
 void net::socket::listen(int backlog, std::error_code& e) noexcept
 {
     CHECK_FOR_ASSIGN(::listen(fd, backlog), e);
-}
-
-void net::socket::bind(const char* addr, uint16_t port)
-{
-    net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol());
-    CHECK_FOR_THROW(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen));
-}
-
-void net::socket::bind(const char* addr, uint16_t port, std::error_code& e) noexcept
-{
-    net::addrinfo ainfo = net::getaddrinfo(addr, std::to_string(port).c_str(), family(), type(), protocol(), 0, e);
-    if (e)
-        return;
-    CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen), e);
 }
 
 void net::socket::bind(std::string_view addr, uint16_t port)

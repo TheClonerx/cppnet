@@ -1,7 +1,3 @@
-#if __cplusplus < 201103L
-#error
-#endif
-
 #pragma once
 #include <memory>
 #include <string>
@@ -10,10 +6,6 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
-
-#if __cplusplus >= 201703L
-#include <string_view>
-#endif
 
 namespace net {
 
@@ -48,38 +40,34 @@ public:
     size_t recv(void*, size_t, int = 0);
     size_t recv(void*, size_t, int, std::error_code&) noexcept;
 
-    size_t send(void*, size_t, int = 0);
-    size_t send(void*, size_t, int, std::error_code&) noexcept;
+    size_t send(const void*, size_t, int = 0);
+    size_t send(const void*, size_t, int, std::error_code&) noexcept;
 
-#if __cplusplus >= 201703L
     size_t send(std::string_view, int = 0);
     size_t send(std::string_view, int, std::error_code&) noexcept;
-#endif
 
     void connect(const sockaddr*, socklen_t);
     void connect(const sockaddr*, socklen_t, std::error_code&) noexcept;
 
     // begin ipv4
-    void connect(const char*, uint16_t);
-    void connect(const char*, uint16_t, std::error_code&) noexcept;
-
-#if __cplusplus >= 201703L
     void connect(std::string_view, uint16_t);
     void connect(std::string_view, uint16_t, std::error_code&) noexcept;
-#endif
     // end ipv4
 
     socket accept();
     socket accept(std::error_code&) noexcept;
 
-    socket accept(int); // for accept4
+    socket accept(sockaddr&, socklen_t&);
+    socket accept(sockaddr&, socklen_t&, std::error_code&) noexcept;
+
+// for accept4
+#ifdef _GNU_SOURCE
+    socket accept(int); 
     socket accept(int, std::error_code&) noexcept;
 
-    socket accept(sockaddr *addr, socklen_t addrlen);
-    socket accept(sockaddr *addr, socklen_t addrlen, std::error_code&) noexcept;
-
-    socket accept(sockaddr*, socklen_t, int); // for accept4
-    socket accept(sockaddr*, socklen_t, int, std::error_code&) noexcept;
+    socket accept(sockaddr&, socklen_t&, int);
+    socket accept(sockaddr&, socklen_t&, int, std::error_code&) noexcept;
+#endif
 
     void listen(int);
     void listen(int, std::error_code&) noexcept;
@@ -88,15 +76,10 @@ public:
     void bind(const sockaddr*, socklen_t, std::error_code&) noexcept;
 
     // begin ipv4
-    // NOTE: const char* and std::string_view variants may works under ipv6,
-    //       since they work with getaddrinfo (resolving to an actual ipv6 address).
-    void bind(const char*, uint16_t);
-    void bind(const char*, uint16_t, std::error_code&) noexcept;
-
-#if __cplusplus >= 201703L
+    // NOTE: std::string_view variant may works under ipv6, since it
+    //       works with getaddrinfo (resolving to an actual ipv6 address).
     void bind(std::string_view, uint16_t);
     void bind(std::string_view, uint16_t, std::error_code&) noexcept;
-#endif
 
     void bind(any_addr_t, uint16_t);
     void bind(any_addr_t, uint16_t, std::error_code&) noexcept;

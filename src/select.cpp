@@ -151,7 +151,7 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
             item.sevents = item.sevents | net::select::EventFlags::write;
-            ret.reads++;
+            ret.writes++;
         } else if (FD_ISSET(item.fd, &xlist)) {
             item.sevents = item.sevents | net::select::EventFlags::except;
             ret.exceptions++;
