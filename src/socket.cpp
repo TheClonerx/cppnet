@@ -301,6 +301,11 @@ void net::socket::setblocking(bool block, std::error_code& e) noexcept
     CHECK_FOR_ASSIGN(r, e);
 }
 
+int net::socket::fileno() const noexcept
+{
+    return fd;
+}
+
 int net::socket::family() const
 {
     return getsockopt<int>(SOL_SOCKET, SO_DOMAIN);
