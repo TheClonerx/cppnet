@@ -10,7 +10,7 @@ BINDIR=bin
 LIBNAME=cppnet
 
 CXXFLAGS=-Wall -Wextra -fPIC -std=c++17 -O2 -DNDEBUG -I$(INCDIR) -L$(LIBDIR)
-LDFLAGS=-s 
+LDFLAGS=-s
 
 LIB_INCLUDES=$(shell find $(INCDIR)/net -type f)
 
@@ -32,14 +32,16 @@ share: $(LIB_SHARE) $(LIB_INCLUDES)
 # static: $(LIB_STATIC) $(LIB_INCLUDES)
 
 tests: $(TESTS)
-	
+
 clean:
 	rm -f $(LIB_STATIC) $(LIB_SHARE) $(TESTS) $(LIB_OBJECTS) $(TEST_OBJECTS)
 
 install: share # static
 	$(if $(INSTALL_DIR),,$(error INSTALL_DIR is undefined))
-	exit 1
-	
+	@mkdir -pv $(INSTALL_DIR)/lib
+	@mkdir -pv $(INSTALL_DIR)/include/net
+	@cp -v $(LIB_SHARE) $(INSTALL_DIR)/lib
+	@cp -v $(LIB_INCLUDES) $(INSTALL_DIR)/include/net
 
 $(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_SHARE)
 	@mkdir -pv $(dir $@)
@@ -49,7 +51,7 @@ $(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_SHARE)
 # 	@mkdir -pv $(dir $@)
 # 	ar rs $(LIB_STATIC) $?
 
-$(LIB_SHARE): $(LIB_OBJECTS) 
+$(LIB_SHARE): $(LIB_OBJECTS)
 	@mkdir -pv $(dir $@)
 	$(CXX) -shared $(CXXFLAGS) $(LDFLAGS) -o $@ $^
 
