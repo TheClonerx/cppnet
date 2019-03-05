@@ -46,6 +46,12 @@ public:
     size_t send(std::string_view, int = 0);
     size_t send(std::string_view, int, std::error_code&) noexcept;
 
+    size_t sendto(const void*, size_t, int, const sockaddr*, socklen_t);
+    size_t sendto(const void*, size_t, int, const sockaddr*, socklen_t, std::error_code&) noexcept;
+
+    size_t sendmsg(const msghdr*, int);
+    size_t sendmsg(const msghdr*, int, std::error_code&) noexcept;
+
     void connect(const sockaddr*, socklen_t);
     void connect(const sockaddr*, socklen_t, std::error_code&) noexcept;
 

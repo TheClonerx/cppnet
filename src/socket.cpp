@@ -118,6 +118,34 @@ size_t net::socket::send(std::string_view b, int flags, std::error_code& e) noex
     return r;
 }
 
+size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, socklen_t addrlen)
+{
+    ssize_t r = ::sendto(fd, buff, size, flags, addr, addrlen);
+    CHECK_FOR_THROW(r);
+    return r;
+}
+
+size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, socklen_t addrlen, std::error_code& e) noexcept
+{
+    ssize_t r = ::sendto(fd, buff, size, flags, addr, addrlen);
+    CHECK_FOR_ASSIGN(r, e);
+    return r;
+}
+
+size_t net::socket::sendmsg(const msghdr* msg, int flags)
+{
+    ssize_t r = ::sendmsg(fd, msg, flags);
+    CHECK_FOR_THROW(r);
+    return r;
+}
+
+size_t net::socket::sendmsg(const msghdr* msg, int flags, std::error_code& e) noexcept
+{
+    ssize_t r = ::sendmsg(fd, msg, flags);
+    CHECK_FOR_ASSIGN(r, e);
+    return r;
+}
+
 #include "net/getaddrinfo.hpp"
 
 void net::socket::connect(std::string_view addr, uint16_t port)
