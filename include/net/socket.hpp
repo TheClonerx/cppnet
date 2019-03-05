@@ -153,6 +153,9 @@ public:
     bool is_accepting() const;
     bool is_accepting(std::error_code&) const noexcept;
 
+    void shutdown(int);
+    void shutdown(int, std::error_code&) noexcept;
+
 protected:
     int fd;
 };

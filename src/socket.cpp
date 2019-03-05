@@ -373,3 +373,13 @@ bool net::socket::is_accepting(std::error_code& e) const noexcept
 {
     return getsockopt<int>(SOL_SOCKET, SO_ACCEPTCONN, e);
 }
+
+void net::socket::shutdown(int how)
+{
+    CHECK_FOR_THROW(::shutdown(fd, how));
+}
+
+void net::socket::shutdown(int how, std::error_code& e) noexcept
+{
+    CHECK_FOR_ASSIGN(::shutdown(fd, how), e);
+}
