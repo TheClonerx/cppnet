@@ -90,6 +90,34 @@ size_t net::socket::recv(void* buff, size_t size, int flags, std::error_code& e)
     return ret;
 }
 
+size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, socklen_t* addrlen)
+{
+    ssize_t ret = ::recvfrom(fd, buff, size, flags, addr, addrlen);
+    CHECK_FOR_THROW(ret);
+    return ret;
+}
+
+size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, socklen_t* addrlen, std::error_code& e) noexcept
+{
+    ssize_t ret = ::recvfrom(fd, buff, size, flags, addr, addrlen);
+    CHECK_FOR_ASSIGN(ret, e);
+    return ret;
+}
+
+size_t net::socket::recvmsg(msghdr* msg, int flags)
+{
+    ssize_t ret = ::recvmsg(fd, msg, flags);
+    CHECK_FOR_THROW(ret);
+    return ret;
+}
+
+size_t net::socket::recvmsg(msghdr* msg, int flags, std::error_code& e) noexcept
+{
+    ssize_t ret = ::recvmsg(fd, msg, flags);
+    CHECK_FOR_ASSIGN(ret, e);
+    return ret;
+}
+
 size_t net::socket::send(const void* buff, size_t size, int flags)
 {
     ssize_t r = ::send(fd, buff, size, flags);

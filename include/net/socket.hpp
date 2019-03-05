@@ -40,6 +40,12 @@ public:
     size_t recv(void*, size_t, int = 0);
     size_t recv(void*, size_t, int, std::error_code&) noexcept;
 
+    size_t recvfrom(void*, size_t, int, sockaddr*, socklen_t*);
+    size_t recvfrom(void*, size_t, int, sockaddr*, socklen_t*, std::error_code&) noexcept;
+
+    size_t recvmsg(msghdr*, int);
+    size_t recvmsg(msghdr*, int, std::error_code&) noexcept;
+
     size_t send(const void*, size_t, int = 0);
     size_t send(const void*, size_t, int, std::error_code&) noexcept;
 
