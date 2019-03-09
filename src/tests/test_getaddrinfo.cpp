@@ -43,7 +43,7 @@ int main(int argc, const char* argv[]) try {
         std::cout << "\tFamily: " << ainfo.family
                   << "\tType: " << ainfo.type
                   << "\tProtocol: " << ainfo.protocol
-                  << "\tAddress: " << net::addr_to_str(ainfo.family, &ainfo.addr);
+                  << "\tAddress: " << net::addr_to_str(&ainfo.addr);
         if (!ainfo.canonname.empty())
             std::cout << "\tCanon name: " << ainfo.canonname;
         std::cout << '\n';

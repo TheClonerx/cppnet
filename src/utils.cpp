@@ -4,19 +4,17 @@
 #include <cstring>
 #include <sys/un.h>
 
-std::string net::addr_to_str(int family, const sockaddr_storage* addr, std::error_code& e) noexcept
+std::string net::addr_to_str(const sockaddr_storage*  addr, std::error_code& e) noexcept
 {
-    assert(addr && "addr is null");
     char buff[1024] { 0 };
     const char* ret = nullptr;
-    if (family == AF_INET)
-        ret = inet_ntop(AF_INET, &((const sockaddr_in*)addr)->sin_addr, buff, sizeof(buff));
-    else if (family == AF_INET6)
-        ret = inet_ntop(AF_INET6, &((const sockaddr_in6*)addr)->sin6_addr, buff, sizeof(buff));
-    else if (family == AF_UNIX) {
-        std::memcpy(buff, ((const sockaddr_un*)addr)->sun_path, std::strlen(((const sockaddr_un*)addr)->sun_path));
-        ret = buff;
-    }
+
+    if (addr->ss_family == AF_INET)
+        ret = inet_ntop(AF_INET, &reinterpret_cast<const sockaddr_in*>(addr)->sin_addr, buff, sizeof(buff));
+    else if (addr->ss_family == AF_INET6)
+        ret = inet_ntop(AF_INET6, &reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr, buff, sizeof(buff));
+    else if (addr->ss_family == AF_UNIX)
+        ret = std::strcpy(buff, reinterpret_cast<const sockaddr_un*>(addr)->sun_path);
 
     if (!ret) {
         e.assign(errno, std::system_category());
@@ -27,19 +25,18 @@ std::string net::addr_to_str(int family, const sockaddr_storage* addr, std::erro
     }
 }
 
-std::string net::addr_to_str(int family, const sockaddr_storage* addr)
+std::string net::addr_to_str(const sockaddr_storage* addr)
 {
-    assert(addr && "addr is null");
     char buff[1024] { 0 };
     const char* ret = nullptr;
-    if (family == AF_INET)
-        ret = inet_ntop(AF_INET, &((const sockaddr_in*)addr)->sin_addr, buff, sizeof(buff));
-    else if (family == AF_INET6)
-        ret = inet_ntop(AF_INET6, &((const sockaddr_in6*)addr)->sin6_addr, buff, sizeof(buff));
-    else if (family == AF_UNIX) {
-        std::memcpy(buff, ((const sockaddr_un*)addr)->sun_path, std::strlen(((const sockaddr_un*)addr)->sun_path));
-        ret = buff;
-    }
+
+    if (addr->ss_family == AF_INET)
+        ret = inet_ntop(AF_INET, &reinterpret_cast<const sockaddr_in*>(addr)->sin_addr, buff, sizeof(buff));
+    else if (addr->ss_family == AF_INET6)
+        ret = inet_ntop(AF_INET6, &reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr, buff, sizeof(buff));
+    else if (addr->ss_family == AF_UNIX)
+        ret = std::strcpy(buff, reinterpret_cast<const sockaddr_un*>(addr)->sun_path);
+
     if (!ret)
         throw std::system_error(errno, std::system_category());
     return buff;
