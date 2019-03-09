@@ -28,22 +28,23 @@ public:
     // ranges
 
     template <typename It>
-    void get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
+    It get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
     {
         for (const pollfd& fd : fds) {
+            if (start == stop) return stop;
             if (fd.revents) {
                 std::get<0>(*start) = fd.fd;
                 std::get<1>(*start) = fd.revents;
-                if (++start == stop)
-                    return;
+                ++start;    
             }
         }
+        return start;
     }
 
     // inserters
 
     template <typename It>
-    void get(It start) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start))
+    It get(It start) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start))
     {
         for (const pollfd& fd : fds) {
             if (fd.revents) {
@@ -52,6 +53,7 @@ public:
                 ++start;
             }
         }
+        return start;
     }
 
 private:

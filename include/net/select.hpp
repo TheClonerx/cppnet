@@ -35,12 +35,12 @@ public:
     // ranges
 
     template <typename It>
-    void get(It start, It end, EventFlags events) const
+    It get(It start, It stop, EventFlags events) const
     {
 
         for (const auto& item : fdlist)
         {
-            if (start == end) return;
+            if (start == stop) return stop;
             if (
                 (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) ||
                 (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) ||
@@ -51,6 +51,7 @@ public:
                 ++start;
             }
         }
+        return start;
     }
 
     // inserters
@@ -70,6 +71,7 @@ public:
                 ++start;
             }
         }
+        return start;
     }
 
 
