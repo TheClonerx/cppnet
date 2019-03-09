@@ -35,7 +35,7 @@ public:
     // ranges
 
     template <typename It>
-    It get(It start, It stop, EventFlags events) const
+    It get(It start, It stop, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
     {
 
         for (const auto& item : fdlist)
@@ -57,7 +57,7 @@ public:
     // inserters
 
     template <typename It>
-    void get(It start, EventFlags events) const
+    void get(It start, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start))
     {
         for (const auto& item : fdlist)
         {
