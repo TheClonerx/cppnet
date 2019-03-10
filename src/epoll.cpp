@@ -1,5 +1,6 @@
 #ifdef __linux__
 #include "net/epoll.hpp"
+#include <unistd.h>
 
 net::epoll::epoll()
     : epoll(0)
@@ -28,6 +29,11 @@ net::epoll::epoll(net::epoll&& rhs) noexcept
     : fd(rhs.fd)
 {
     rhs.fd = -1;
+}
+
+net::epoll::~epoll() noexcept
+{
+    ::close(fd);
 }
 
 net::epoll& net::epoll::operator=(net::epoll&& rhs) noexcept

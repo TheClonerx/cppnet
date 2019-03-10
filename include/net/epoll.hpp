@@ -24,6 +24,8 @@ public:
     epoll(epoll&&) noexcept;
     epoll& operator=(epoll&&) noexcept;
 
+    ~epoll() noexcept;
+
     bool add(int, int) noexcept;
     bool add(int, int, std::error_code&) noexcept;
 
