@@ -58,7 +58,6 @@ bool net::epoll::add(int fd, int events) noexcept
     }
 }
 
-
 bool net::epoll::add(int fd, int events, std::error_code& e) noexcept
 {
     epoll_event event;
@@ -67,10 +66,10 @@ bool net::epoll::add(int fd, int events, std::error_code& e) noexcept
 
     int ret = epoll_ctl(this->fd, EPOLL_CTL_ADD, fd, &event);
 
-    if (ret < 0 ) {
+    if (ret < 0) {
         e.assign(errno, std::system_category());
         return false;
-    } else  {
+    } else {
         e.assign(0, std::system_category());
         ++size;
         return true;
@@ -94,10 +93,10 @@ bool net::epoll::modify(int fd, int events, std::error_code& e) noexcept
 
     int ret = epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &event);
 
-    if (ret < 0 ) {
+    if (ret < 0) {
         e.assign(errno, std::system_category());
         return false;
-    } else  {
+    } else {
         e.assign(0, std::system_category());
         return true;
     }
@@ -118,10 +117,10 @@ bool net::epoll::remove(int fd, std::error_code& e) noexcept
 {
     int ret = epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, nullptr);
 
-    if (ret < 0 ) {
+    if (ret < 0) {
         e.assign(errno, std::system_category());
         return false;
-    } else  {
+    } else {
         e.assign(0, std::system_category());
         --size;
         return true;
@@ -131,7 +130,7 @@ bool net::epoll::remove(int fd, std::error_code& e) noexcept
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event{});
+    data.insert(data.begin(), size, epoll_event {});
     int ret = epoll_wait(fd, data.data(), size, timeout ? timeout->count() : -1);
     if (ret < 0)
         throw std::system_error(errno, std::system_category());
@@ -141,7 +140,7 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout)
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, std::error_code& e)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event{}); // this may throw sadly
+    data.insert(data.begin(), size, epoll_event {}); // this may throw sadly
     int ret = epoll_wait(fd, data.data(), size, timeout ? timeout->count() : -1);
     if (ret < 0) {
         e.assign(errno, std::system_category());
@@ -155,7 +154,7 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, std
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, const sigset_t& sigmask)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event{});
+    data.insert(data.begin(), size, epoll_event {});
     int ret = epoll_pwait(fd, data.data(), size, timeout ? timeout->count() : -1, &sigmask);
     if (ret < 0)
         throw std::system_error(errno, std::system_category());
@@ -165,7 +164,7 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, con
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, const sigset_t& sigmask, std::error_code& e)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event{}); // this may throw sadly
+    data.insert(data.begin(), size, epoll_event {}); // this may throw sadly
     int ret = epoll_pwait(fd, data.data(), size, timeout ? timeout->count() : -1, &sigmask);
     if (ret < 0) {
         e.assign(errno, std::system_category());

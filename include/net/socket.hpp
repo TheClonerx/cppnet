@@ -17,7 +17,6 @@ struct localhost_t {
 };
 constexpr localhost_t localhost;
 
-
 class socket {
 public:
     socket(); // may trow
@@ -77,7 +76,7 @@ public:
 
 // for accept4
 #ifdef _GNU_SOURCE
-    socket accept(int); 
+    socket accept(int);
     socket accept(int, std::error_code&) noexcept;
 
     socket accept(sockaddr&, socklen_t&, int);

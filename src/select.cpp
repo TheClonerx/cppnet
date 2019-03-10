@@ -7,8 +7,6 @@ bool net::select::add(int fd, net::select::EventFlags events)
         return item.fd == fd;
     });
 
-
-    
     if (it != fdlist.end()) {
         EventFlags prev = it->events;
         it->events = it->events | events;
@@ -16,11 +14,10 @@ bool net::select::add(int fd, net::select::EventFlags events)
             return false;
         return true;
     }
-    
-    fdlist.emplace_back(Item{fd, events, static_cast<net::select::EventFlags>(0)});
+
+    fdlist.emplace_back(Item { fd, events, static_cast<net::select::EventFlags>(0) });
     return true;
 }
-
 
 bool net::select::remove(int fd, net::select::EventFlags events)
 {
@@ -39,7 +36,8 @@ bool net::select::remove(int fd, net::select::EventFlags events)
         return true;
     }
 
-    if (prev != it->events) return true;
+    if (prev != it->events)
+        return true;
     return false;
 }
 
@@ -129,7 +127,7 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
-    
+
     {
         timeval tm;
         if (timeout) {
@@ -160,7 +158,6 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     return ret;
 }
-
 
 #ifdef _GNU_SOURCE
 

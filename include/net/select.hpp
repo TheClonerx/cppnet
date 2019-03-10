@@ -1,21 +1,18 @@
 #pragma once
 #include <chrono>
+#include <list>
 #include <optional>
 #include <system_error>
-#include <list>
 
 namespace net {
 
-struct select_return_t
-{
+struct select_return_t {
     size_t reads, writes, exceptions;
 };
 
 class select {
 public:
-
-    enum class EventFlags : unsigned
-    {
+    enum class EventFlags : unsigned {
         read = 1,
         write = 2,
         except = 4
@@ -38,15 +35,11 @@ public:
     It get(It start, It stop, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
     {
 
-        for (const auto& item : fdlist)
-        {
-            if (start == stop) return stop;
+        for (const auto& item : fdlist) {
+            if (start == stop)
+                return stop;
             if (
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) ||
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) ||
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))
-            )
-            {
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))) {
                 *start = item.fd;
                 ++start;
             }
@@ -59,14 +52,9 @@ public:
     template <typename It>
     void get(It start, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start))
     {
-        for (const auto& item : fdlist)
-        {
+        for (const auto& item : fdlist) {
             if (
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) ||
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) ||
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))
-            )
-            {
+                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))) {
                 *start = item.fd;
                 ++start;
             }
@@ -74,14 +62,12 @@ public:
         return start;
     }
 
-
 private:
-    struct Item
-    {
+    struct Item {
         int fd;
         EventFlags events; // events to select
         EventFlags sevents; // selected events
-    }; 
+    };
 
     std::list<Item> fdlist;
 };

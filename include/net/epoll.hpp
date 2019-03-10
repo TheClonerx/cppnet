@@ -3,16 +3,14 @@
 #error epoll is only avilable for linux
 #endif
 
-#include <system_error>
 #include <chrono>
-#include <vector>
 #include <optional>
 #include <sys/epoll.h>
+#include <system_error>
+#include <vector>
 
-namespace net
-{
-class epoll
-{
+namespace net {
+class epoll {
 public:
     epoll();
     explicit epoll(int);
@@ -47,9 +45,9 @@ public:
     template <typename It>
     It get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
     {
-        for (const epoll_event& item : data)
-        {
-            if (start == stop) return stop;
+        for (const epoll_event& item : data) {
+            if (start == stop)
+                return stop;
             std::get<0>(*start) = item.data.fd;
             std::get<1>(*start) = item.events;
             ++start;
@@ -61,8 +59,7 @@ public:
     template <typename It>
     It get(It it) const noexcept(noexcept(std::get<0>(*it) = 0) && noexcept(std::get<1>(*it) = 0) && noexcept(++it))
     {
-        for (const epoll_event& item : data)
-        {
+        for (const epoll_event& item : data) {
             std::get<0>(*it) = item.data.fd;
             std::get<1>(*it) = item.events;
             ++it;

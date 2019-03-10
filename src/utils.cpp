@@ -4,7 +4,7 @@
 #include <cstring>
 #include <sys/un.h>
 
-std::string net::addr_to_str(const sockaddr_storage*  addr, std::error_code& e) noexcept
+std::string net::addr_to_str(const sockaddr_storage* addr, std::error_code& e) noexcept
 {
     char buff[1024] { 0 };
     const char* ret = nullptr;

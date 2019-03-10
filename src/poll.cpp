@@ -78,7 +78,7 @@ size_t net::poll::execute(std::optional<std::chrono::nanoseconds> timeout, const
         tm.tv_sec = std::chrono::duration_cast<std::chrono::duration<long>>(timeout.value()).count();
         tm.tv_nsec = timeout.value().count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
     }
-    
+
     for (pollfd& fd : fds)
         fd.revents = 0;
 
