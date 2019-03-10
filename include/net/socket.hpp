@@ -32,6 +32,9 @@ public:
     socket(int, int, int);
     socket(int, int, int, std::error_code&) noexcept;
 
+    static std::pair<socket, socket> pair(int = AF_UNIX, int = SOCK_STREAM, int = 0);
+    static std::pair<socket, socket> pair(int, int, int, std::error_code&) noexcept;
+
     static socket from_fileno(int) noexcept;
 
     socket dup() const;

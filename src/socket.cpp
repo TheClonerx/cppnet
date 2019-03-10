@@ -62,6 +62,25 @@ net::socket net::socket::from_fileno(int fd) noexcept
     return std::move(*reinterpret_cast<net::socket*>(&fd));
 }
 
+std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int proto)
+{
+    int fds[2];
+    CHECK_FOR_THROW(::socketpair(family, type, proto, fds));
+    return { net::socket::from_fileno(fds[0]), net::socket::from_fileno(fds[1]) };
+}
+
+std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int proto, std::error_code& e) noexcept
+{
+    int fds[2];
+    if (::socketpair(family, type, proto, fds) < 0) {
+        ASSIGN_ERRNO(e);
+        return { net::socket::from_fileno(-1), net::socket::from_fileno(-1) };
+    } else {
+        ASSIGN_ZERO(e);
+        return { net::socket::from_fileno(fds[0]), net::socket::from_fileno(fds[1]) };
+    }
+}
+
 net::socket net::socket::dup() const
 {
     int r = ::dup(fd);
