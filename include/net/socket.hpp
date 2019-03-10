@@ -21,8 +21,8 @@ constexpr localhost_t localhost;
 class socket {
 public:
     socket(); // may trow
-    socket(socket&&) noexcept = default;
-    socket& operator=(socket&&) noexcept = default;
+    socket(socket&&) noexcept;
+    socket& operator=(socket&&) noexcept;
     socket(const socket&) = delete;
     socket& operator=(const socket&) = delete;
     ~socket() noexcept;

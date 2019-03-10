@@ -33,6 +33,19 @@ net::socket::socket()
 {
 }
 
+net::socket::socket(net::socket&& rhs) noexcept
+    : fd(rhs.fd)
+{
+    rhs.fd = -1;
+}
+
+net::socket& net::socket::operator=(net::socket&& rhs) noexcept
+{
+    fd = rhs.fd;
+    rhs.fd = -1;
+    return *this;
+}
+
 net::socket::socket(std::error_code& e) noexcept
     : net::socket(AF_INET, SOCK_STREAM, 0, e)
 {
@@ -59,7 +72,7 @@ net::socket::~socket() noexcept
 net::socket net::socket::from_fileno(int fd) noexcept
 {
     // net::socket is just a wraper around an int
-    return std::move(*reinterpret_cast<net::socket*>(&fd));
+    return reinterpret_cast<net::socket&&>(fd);
 }
 
 std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int proto)
