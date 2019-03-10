@@ -69,6 +69,10 @@ public:
         }
         return it;
     }
+
+    void close();
+    void close(std::error_code&) noexcept;
+
 private:
     int fd;
     std::vector<epoll_event> data;

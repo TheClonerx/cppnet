@@ -175,4 +175,22 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, con
         return ret;
     }
 }
+
+void net::epoll::close()
+{
+    if (::close(fd) < 0)
+        throw std::system_error(errno, std::system_category());
+    fd = -1;
+}
+
+void net::epoll::close(std::error_code& e) noexcept
+{
+    if (::close(fd) < 0)
+        e.assign(errno, std::system_category());
+    else {
+        e.assign(0, std::system_category());
+        fd = -1;
+    }
+}
+
 #endif
