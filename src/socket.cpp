@@ -443,3 +443,19 @@ void net::socket::shutdown(int how, std::error_code& e) noexcept
 {
     CHECK_FOR_ASSIGN(::shutdown(fd, how), e);
 }
+
+void net::socket::close()
+{
+    CHECK_FOR_THROW(::close(fd));
+    fd = -1;
+}
+
+void net::socket::close(std::error_code& e) noexcept
+{
+    if (::close(fd) < 0)
+        ASSIGN_ERRNO(e);
+    else {
+        ASSIGN_ZERO(e);
+        fd = -1;
+    }
+}

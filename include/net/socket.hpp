@@ -165,6 +165,9 @@ public:
     void shutdown(int);
     void shutdown(int, std::error_code&) noexcept;
 
+    void close();
+    void close(std::error_code&) noexcept;
+
 protected:
     int fd;
 };
