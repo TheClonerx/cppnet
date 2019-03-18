@@ -3,32 +3,6 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 
-net::addrinfo& net::getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags)
-{
-    net::getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
-    return ainfo;
-}
-
-net::addrinfo& net::getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
-{
-    net::getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
-    return ainfo;
-}
-
-net::addrinfo net::getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags)
-{
-    net::addrinfo ainfo;
-    net::getaddrinfo(ainfo, host, service, family, type, protocol, flags);
-    return ainfo;
-}
-
-net::addrinfo net::getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
-{
-    net::addrinfo ainfo;
-    net::getaddrinfo(ainfo, host, service, family, type, protocol, flags, e);
-    return ainfo;
-}
-
 const std::error_category& net::addrinfo_category()
 {
     class addrinfo_category_t : public std::error_category {

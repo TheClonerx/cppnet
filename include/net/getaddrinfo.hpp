@@ -10,7 +10,7 @@
 
 namespace net {
 
-const ::std::error_category& addrinfo_category();
+const std::error_category& addrinfo_category();
 
 struct addrinfo {
     int family;
@@ -40,7 +40,6 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
         e.assign(r, addrinfo_category());
         return start;
     } else
-
         e.assign(0, std::system_category());
 
     sockaddr_storage tmp;
@@ -80,9 +79,8 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
     } else if (r != 0) {
         e.assign(r, addrinfo_category());
         return it;
-    } else {
+    } else
         e.assign(0, std::system_category());
-    }
 
     sockaddr_storage tmp;
 
@@ -122,9 +120,25 @@ It getaddrinfo(It it, const char* host, const char* service, int family = 0, int
     return ret;
 }
 
-addrinfo& getaddrinfo(addrinfo&, const char*, const char*, int = 0, int = 0, int = 0, int = 0);
-addrinfo& getaddrinfo(addrinfo&, const char*, const char*, int, int, int, int, std::error_code&) noexcept;
-addrinfo getaddrinfo(const char*, const char*, int = 0, int = 0, int = 0, int = 0);
-addrinfo getaddrinfo(const char*, const char*, int, int, int, int, std::error_code&) noexcept;
+inline addrinfo& getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
+{
+    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
+    return ainfo;
+}
+inline addrinfo& getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
+{
+    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
+    return ainfo;
+}
+inline addrinfo getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
+{
+    addrinfo ainfo;
+    return getaddrinfo(ainfo, service, host, family, type, protocol, flags);
+}
+inline addrinfo getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
+{
+    addrinfo ainfo;
+    return getaddrinfo(ainfo, service, host, family, type, protocol, flags, e);
+}
 
 }
