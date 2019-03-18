@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 
 #include <netdb.h>
 #include <sys/socket.h>
@@ -166,6 +167,12 @@ public:
 
     void close();
     void close(std::error_code&) noexcept;
+
+    friend void swap(socket& lhs, socket& rhs) noexcept
+    {
+        using std::swap;
+        swap(lhs.fd, rhs.fd);
+    }
 
 protected:
     int fd;
