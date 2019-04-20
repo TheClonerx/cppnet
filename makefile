@@ -9,32 +9,32 @@ BINDIR=bin
 
 LIBNAME=cppnet
 
-CXXFLAGS=-Wall -Wextra -fPIC -std=c++17 -O2 -DNDEBUG -I$(INCDIR)
+CXXFLAGS=-Wall -Wextra -Wpedantic -fPIC -std=c++17 -O2 -DNDEBUG -I$(INCDIR)
 LDFLAGS=-s -L$(LIBDIR)
 
 LIB_INCLUDES=$(shell find $(INCDIR)/net -type f)
 
-LIB_SOURCES=$(shell find src/ ! -path "*/tests/*" -type f)
-TEST_SOURCES=$(shell find $(SRCDIR)/tests -type f)
+LIB_SOURCES=$(shell find src/ ! -path "*/examples/*" -type f)
+TEST_SOURCES=$(shell find $(SRCDIR)/examples -type f)
 
 LIB_OBJECTS=$(patsubst $(SRCDIR)/%,$(OBJDIR)/%.o,$(LIB_SOURCES))
-TEST_OBJECTS=$(patsubst $(SRCDIR)/tests/%,$(OBJDIR)/tests/%.o,$(TEST_SOURCES))
+TEST_OBJECTS=$(patsubst $(SRCDIR)/examples/%,$(OBJDIR)/examples/%.o,$(TEST_SOURCES))
 
 LIB_STATIC=$(LIBDIR)/lib$(LIBNAME).a
 LIB_SHARE=$(LIBDIR)/lib$(LIBNAME).so
 
-TESTS=$(patsubst $(SRCDIR)/tests/%,$(BINDIR)/tests/%,$(basename $(TEST_SOURCES)))
+EXAMPLES=$(patsubst $(SRCDIR)/examples/%,$(BINDIR)/examples/%,$(basename $(TEST_SOURCES)))
 
-all: share tests # static
+all: share examples # static
 
 share: $(LIB_SHARE) $(LIB_INCLUDES)
 
 # static: $(LIB_STATIC) $(LIB_INCLUDES)
 
-tests: $(TESTS)
+examples: $(EXAMPLES)
 
 clean:
-	rm -f $(LIB_STATIC) $(LIB_SHARE) $(TESTS) $(LIB_OBJECTS) $(TEST_OBJECTS)
+	rm -f $(LIB_STATIC) $(LIB_SHARE) $(EXAMPLES) $(LIB_OBJECTS) $(TEST_OBJECTS)
 
 install: share # static
 	$(if $(INSTALL_DIR),,$(error INSTALL_DIR is undefined))
@@ -43,7 +43,7 @@ install: share # static
 	@cp -v $(LIB_SHARE) $(INSTALL_DIR)/lib
 	@cp -v $(LIB_INCLUDES) $(INSTALL_DIR)/include/net
 
-$(BINDIR)/tests/%: $(OBJDIR)/tests/%.cpp.o $(LIB_SHARE)
+$(BINDIR)/examples/%: $(OBJDIR)/examples/%.cpp.o $(LIB_SHARE)
 	@mkdir -pv $(dir $@)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -l$(LIBNAME) -lpthread -o $@ $<
 

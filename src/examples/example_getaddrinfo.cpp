@@ -15,7 +15,6 @@ void test_reference(const char*, const char*);
 void test_return(const char*, const char*);
 
 int main(int argc, const char* argv[]) try {
-
     if (argc < 2 || argc > 3) {
         std::cerr << "Usage:\n\t" << argv[0] << " host [service/port]\n";
         exit(EXIT_FAILURE);
@@ -48,7 +47,6 @@ int main(int argc, const char* argv[]) try {
             std::cout << "\tCanon name: " << ainfo.canonname;
         std::cout << '\n';
     }
-
 } catch (std::system_error& e) {
     std::cerr << e.code().category().name()
               << " error (" << e.code().value() << "):\n\t"

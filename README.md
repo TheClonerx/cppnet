@@ -6,17 +6,17 @@ This project aims to create an intuitive and easy to use wrappers around the lin
 ## Building
 Building is easy as typing `make` in your terminal! :)
 
-This will build the shared library and the tests.
+This will build the shared library and the examples.
 ```bash
 git clone https://github.com/TheClonerx/cppnet.git
 cd cppnet
 make
 ```
 
-## Running the tests
+## Running the examples
 ```bash
 export LD_LIBRARY_PATH="$PWD/lib"
-./bin/tests/test_getaddrinfo google.net 80
+./bin/examples/example_getaddrinfo google.net 80
 ```
 
 ## Installing

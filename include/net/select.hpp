@@ -34,7 +34,6 @@ public:
     template <typename It>
     It get(It start, It stop, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
     {
-
         for (const auto& item : fdlist) {
             if (start == stop)
                 return stop;
