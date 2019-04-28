@@ -29,85 +29,85 @@ public:
 
     explicit socket(std::error_code&) noexcept;
 
-    socket(int, int, int);
-    socket(int, int, int, std::error_code&) noexcept;
+    socket(int family, int type, int protocol);
+    socket(int family, int type, int protocol, std::error_code&) noexcept;
 
-    static std::pair<socket, socket> pair(int = AF_UNIX, int = SOCK_STREAM, int = 0);
-    static std::pair<socket, socket> pair(int, int, int, std::error_code&) noexcept;
+    static std::pair<socket, socket> pair(int family = AF_UNIX, int type = SOCK_STREAM, int protocol = 0);
+    static std::pair<socket, socket> pair(int family, int type, int protocol, std::error_code&) noexcept;
 
-    static socket from_fileno(int) noexcept;
+    static socket from_fileno(int fd) noexcept;
 
     socket dup() const;
     socket dup(std::error_code&) const noexcept;
 
-    size_t recv(void*, size_t, int = 0);
-    size_t recv(void*, size_t, int, std::error_code&) noexcept;
+    size_t recv(void* buffer, size_t size, int flags = 0);
+    size_t recv(void* buffer, size_t size, int flags, std::error_code&) noexcept;
 
-    size_t recvfrom(void*, size_t, int, sockaddr*, socklen_t*);
-    size_t recvfrom(void*, size_t, int, sockaddr*, socklen_t*, std::error_code&) noexcept;
+    size_t recvfrom(void* buffer, size_t size, int flags, sockaddr* address, socklen_t* address_size);
+    size_t recvfrom(void* buffer, size_t size, int flags, sockaddr* address, socklen_t* address_size, std::error_code&) noexcept;
 
-    size_t recvmsg(msghdr*, int);
-    size_t recvmsg(msghdr*, int, std::error_code&) noexcept;
+    size_t recvmsg(msghdr* message, int flags = 0);
+    size_t recvmsg(msghdr* message, int flags, std::error_code&) noexcept;
 
-    size_t send(const void*, size_t, int = 0);
-    size_t send(const void*, size_t, int, std::error_code&) noexcept;
+    size_t send(const void* buffer, size_t size, int flags = 0);
+    size_t send(const void* buffer, size_t size, int flags, std::error_code&) noexcept;
 
-    size_t send(std::string_view, int = 0);
-    size_t send(std::string_view, int, std::error_code&) noexcept;
+    size_t send(std::string_view buffer, int flags = 0);
+    size_t send(std::string_view buffer, int flags, std::error_code&) noexcept;
 
-    size_t sendto(const void*, size_t, int, const sockaddr*, socklen_t);
-    size_t sendto(const void*, size_t, int, const sockaddr*, socklen_t, std::error_code&) noexcept;
+    size_t sendto(const void* buffer, size_t size, int flags, const sockaddr* address, socklen_t address_size);
+    size_t sendto(const void* buffer, size_t size, int flags, const sockaddr* address, socklen_t address_size, std::error_code&) noexcept;
 
-    size_t sendmsg(const msghdr*, int);
-    size_t sendmsg(const msghdr*, int, std::error_code&) noexcept;
+    size_t sendmsg(const msghdr* message, int flags = 0);
+    size_t sendmsg(const msghdr* message, int flags, std::error_code&) noexcept;
 
-    void connect(const sockaddr*, socklen_t);
-    void connect(const sockaddr*, socklen_t, std::error_code&) noexcept;
+    void connect(const sockaddr* address, socklen_t address_size);
+    void connect(const sockaddr* address, socklen_t address_size, std::error_code&) noexcept;
 
     // begin ipv4
-    void connect(std::string_view, uint16_t);
-    void connect(std::string_view, uint16_t, std::error_code&) noexcept;
+    void connect(std::string_view host, uint16_t port);
+    void connect(std::string_view host, uint16_t port, std::error_code&) noexcept;
     // end ipv4
 
     socket accept();
     socket accept(std::error_code&) noexcept;
 
-    socket accept(sockaddr&, socklen_t&);
-    socket accept(sockaddr&, socklen_t&, std::error_code&) noexcept;
+    socket accept(sockaddr& address, socklen_t& address_size);
+    socket accept(sockaddr& address, socklen_t& address_size, std::error_code&) noexcept;
 
 // for accept4
 #ifdef _GNU_SOURCE
-    socket accept(int);
-    socket accept(int, std::error_code&) noexcept;
+    socket accept(int flags);
+    socket accept(int flags, std::error_code&) noexcept;
 
-    socket accept(sockaddr&, socklen_t&, int);
-    socket accept(sockaddr&, socklen_t&, int, std::error_code&) noexcept;
+    socket accept(sockaddr& address, socklen_t& address_size, int flags);
+    socket accept(sockaddr& address, socklen_t& address_size, int flags, std::error_code&) noexcept;
 #endif
 
-    void listen(int);
-    void listen(int, std::error_code&) noexcept;
+    void listen(int backlog);
+    void listen(int backlog, std::error_code&) noexcept;
 
-    void bind(const sockaddr*, socklen_t);
-    void bind(const sockaddr*, socklen_t, std::error_code&) noexcept;
+    void bind(const sockaddr* address, socklen_t address_size);
+    void bind(const sockaddr* address, socklen_t address_size, std::error_code&) noexcept;
 
     // begin ipv4
     // NOTE: std::string_view variant may works under ipv6, since it
     //       works with getaddrinfo (resolving to an actual ipv6 address).
-    void bind(std::string_view, uint16_t);
-    void bind(std::string_view, uint16_t, std::error_code&) noexcept;
+    void bind(std::string_view host, uint16_t port);
+    void bind(std::string_view host, uint16_t port, std::error_code&) noexcept;
 
-    void bind(any_addr_t, uint16_t);
-    void bind(any_addr_t, uint16_t, std::error_code&) noexcept;
+    void bind(any_addr_t, uint16_t port);
+    void bind(any_addr_t, uint16_t port, std::error_code&) noexcept;
 
-    void bind(localhost_t, uint16_t);
-    void bind(localhost_t, uint16_t, std::error_code&) noexcept;
+    void bind(localhost_t, uint16_t port);
+    void bind(localhost_t, uint16_t port, std::error_code&) noexcept;
     // end ipv4
 
-    void getsockopt(int, int, void*, socklen_t*) const;
-    void getsockopt(int, int, void*, socklen_t*, std::error_code&) const noexcept;
+    void getsockopt(int level, int optname, void* optval, socklen_t* optlen) const;
+    void getsockopt(int level, int optname, void* optval, socklen_t* optlen, std::error_code&) const noexcept;
 
-    void setsockopt(int, int, void*, socklen_t, std::error_code&) noexcept;
-    void setsockopt(int, int, void*, socklen_t);
+    void setsockopt(int level, int optname, void* optval, socklen_t optlen, std::error_code&) noexcept;
+    void setsockopt(int level, int optname, void* optval, socklen_t optlen);
 
     void setblocking(bool);
     void setblocking(bool, std::error_code&) noexcept;

@@ -18,15 +18,15 @@ public:
         except = 4
     };
 
-    bool add(int, EventFlags);
-    bool remove(int, EventFlags);
+    bool add(int fd, EventFlags events);
+    bool remove(int fd, EventFlags events);
 
-    select_return_t execute(std::optional<std::chrono::microseconds>);
-    select_return_t execute(std::optional<std::chrono::microseconds>, std::error_code&) noexcept;
+    select_return_t execute(std::optional<std::chrono::microseconds> microseconds = std::nullopt);
+    select_return_t execute(std::optional<std::chrono::microseconds> microseconds, std::error_code&) noexcept;
 
 #ifdef _GNU_SOURCE
-    select_return_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&);
-    select_return_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&, std::error_code&) noexcept;
+    select_return_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask);
+    select_return_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask, std::error_code&) noexcept;
 #endif
 
     // ranges

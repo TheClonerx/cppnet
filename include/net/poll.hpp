@@ -12,17 +12,17 @@
 namespace net {
 class poll {
 public:
-    bool add(int fd, short eventmask);
-    bool modify(int fd, short eventmask);
+    bool add(int fd, short events);
+    bool modify(int fd, short events);
     bool unregister(int fd);
 
-    size_t execute(std::chrono::milliseconds);
-    size_t execute(std::chrono::milliseconds, std::error_code&) noexcept;
+    size_t execute(std::chrono::milliseconds milliseconds);
+    size_t execute(std::chrono::milliseconds milliseconds, std::error_code&) noexcept;
 
 #ifdef _GNU_SOURCE
     // for ppoll
-    size_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&);
-    size_t execute(std::optional<std::chrono::nanoseconds>, const sigset_t&, std::error_code&) noexcept;
+    size_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask);
+    size_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask, std::error_code&) noexcept;
 #endif
 
     // ranges

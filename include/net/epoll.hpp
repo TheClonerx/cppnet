@@ -13,8 +13,8 @@ namespace net {
 class epoll {
 public:
     epoll();
-    explicit epoll(int);
-    epoll(int, std::error_code&) noexcept;
+    explicit epoll(int flags);
+    epoll(int flags, std::error_code&) noexcept;
 
     epoll(const epoll&) = delete;
     epoll& operator=(const epoll&) = delete;
@@ -24,20 +24,20 @@ public:
 
     ~epoll() noexcept;
 
-    bool add(int, int) noexcept;
-    bool add(int, int, std::error_code&) noexcept;
+    bool add(int fd, int events) noexcept;
+    bool add(int fd, int events, std::error_code&) noexcept;
 
-    bool modify(int, int) noexcept;
-    bool modify(int, int, std::error_code&) noexcept;
+    bool modify(int fd, int events) noexcept;
+    bool modify(int fd, int events, std::error_code&) noexcept;
 
-    bool remove(int) noexcept;
-    bool remove(int, std::error_code&) noexcept;
+    bool remove(int fd) noexcept;
+    bool remove(int fd, std::error_code&) noexcept;
 
-    size_t execute(std::optional<std::chrono::milliseconds>);
-    size_t execute(std::optional<std::chrono::milliseconds>, std::error_code&);
+    size_t execute(std::optional<std::chrono::milliseconds> milliseconds);
+    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, std::error_code&);
 
-    size_t execute(std::optional<std::chrono::milliseconds>, const sigset_t&);
-    size_t execute(std::optional<std::chrono::milliseconds>, const sigset_t&, std::error_code&);
+    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask);
+    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask, std::error_code&);
 
     int fileno() const noexcept;
 
