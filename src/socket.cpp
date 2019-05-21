@@ -206,6 +206,14 @@ size_t net::socket::sendmsg(const msghdr* msg, int flags, std::error_code& e) no
     return r;
 }
 
+void net::socket::connect(const sockaddr* addr, socklen_t addr_len) {
+    CHECK_FOR_THROW(::connect(fd, addr, addr_len));
+}
+
+void net::socket::connect(const sockaddr* addr, socklen_t addr_len, std::error_code& e) noexcept {
+    CHECK_FOR_ASSIGN(::connect(fd, addr, addr_len), e);
+}
+
 #include "net/getaddrinfo.hpp"
 
 void net::socket::connect(std::string_view addr, uint16_t port)
