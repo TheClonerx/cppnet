@@ -39,7 +39,7 @@ net::epoll::~epoll() noexcept
 net::epoll& net::epoll::operator=(net::epoll&& rhs) noexcept
 {
     fd = rhs.fd;
-    rhs.fd = 0;
+    rhs.fd = -1;
     return *this;
 }
 
@@ -82,7 +82,7 @@ bool net::epoll::modify(int fd, int events) noexcept
     event.events = events;
     event.data.fd = fd;
 
-    return epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &event) < 0;
+    return !epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &event);
 }
 
 bool net::epoll::modify(int fd, int events, std::error_code& e) noexcept

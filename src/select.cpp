@@ -1,44 +1,32 @@
 #include "net/select.hpp"
 #include <algorithm>
 
-bool net::select::add(int fd, net::select::EventFlags events)
+bool net::select::add(int fd, int events)
 {
-    auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const Item& item) {
+
+    auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
         return item.fd == fd;
     });
 
-    if (it != fdlist.end()) {
-        EventFlags prev = it->events;
-        it->events = it->events | events;
-        if (prev == it->events)
-            return false;
-        return true;
-    }
+    if (it != fdlist.end())
+        return false;
 
-    fdlist.emplace_back(Item { fd, events, static_cast<net::select::EventFlags>(0) });
+    fdlist.emplace_back(selectfd{fd, events, 0});
     return true;
 }
 
-bool net::select::remove(int fd, net::select::EventFlags events)
+bool net::select::remove(int fd)
 {
-    auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const Item& item) {
+    auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
         return item.fd == fd;
     });
 
     if (it == fdlist.end())
         return false;
 
-    net::select::EventFlags prev = it->events;
-    it->events = it->events ^ events;
+    fdlist.erase(it);
 
-    if (!it->events) {
-        fdlist.erase(it);
-        return true;
-    }
-
-    if (prev != it->events)
-        return true;
-    return false;
+    return true;
 }
 
 net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout)
@@ -57,15 +45,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     int maxfd = 0;
 
     for (auto& item : fdlist) {
-        item.sevents = static_cast<net::select::EventFlags>(0);
+        item.sevents = 0;
         if (maxfd < item.fd)
             maxfd = item.fd;
 
-        if (static_cast<bool>(item.events & net::select::EventFlags::read))
+        if (item.events & READ)
             FD_SET(item.fd, &rlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::write))
+        if (item.events & WRITE)
             FD_SET(item.fd, &wlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::except))
+        if (item.events & EXCEPT)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
@@ -83,15 +71,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     net::select_return_t ret { 0, 0, 0 };
 
-    for (Item& item : fdlist) {
+    for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::read;
+            item.sevents = item.sevents | READ;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::write;
-            ret.reads++;
+            item.sevents = item.sevents | WRITE;
+            ret.writes++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::except;
+            item.sevents = item.sevents | EXCEPT;
             ret.exceptions++;
         }
     }
@@ -115,15 +103,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     int maxfd = 0;
 
     for (auto& item : fdlist) {
-        item.sevents = static_cast<net::select::EventFlags>(0);
+        item.sevents = 0;
         if (maxfd < item.fd)
             maxfd = item.fd;
 
-        if (static_cast<bool>(item.events & net::select::EventFlags::read))
+        if (item.events & READ)
             FD_SET(item.fd, &rlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::write))
+        if (item.events & WRITE)
             FD_SET(item.fd, &wlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::except))
+        if (item.events & EXCEPT)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
@@ -143,15 +131,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     net::select_return_t ret { 0, 0, 0 };
 
-    for (Item& item : fdlist) {
+    for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::read;
+            item.sevents = item.sevents | READ;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::write;
+            item.sevents = item.sevents | WRITE;
             ret.writes++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::except;
+            item.sevents = item.sevents | EXCEPT;
             ret.exceptions++;
         }
     }
@@ -176,15 +164,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 
     int maxfd = 0;
     for (auto& item : fdlist) {
-        item.sevents = static_cast<net::select::EventFlags>(0);
+        item.sevents = 0;
         if (maxfd < item.fd)
             maxfd = item.fd;
 
-        if (static_cast<bool>(item.events & net::select::EventFlags::read))
+        if (item.events & READ)
             FD_SET(item.fd, &rlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::write))
+        if (item.events & WRITE)
             FD_SET(item.fd, &wlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::except))
+        if (item.events & EXCEPT)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
@@ -202,15 +190,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 
     net::select_return_t ret { 0, 0, 0 };
 
-    for (Item& item : fdlist) {
+    for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::read;
+            item.sevents = item.sevents | READ;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::write;
+            item.sevents = item.sevents | WRITE;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::except;
+            item.sevents = item.sevents | EXCEPT;
             ret.exceptions++;
         }
     }
@@ -233,15 +221,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 
     int maxfd = 0;
     for (auto& item : fdlist) {
-        item.sevents = static_cast<net::select::EventFlags>(0);
+        item.sevents = 0;
         if (maxfd < item.fd)
             maxfd = item.fd;
 
-        if (static_cast<bool>(item.events & net::select::EventFlags::read))
+        if (item.events & READ)
             FD_SET(item.fd, &rlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::write))
+        if (item.events & WRITE)
             FD_SET(item.fd, &wlist);
-        if (static_cast<bool>(item.events & net::select::EventFlags::except))
+        if (item.events & EXCEPT)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
@@ -261,15 +249,15 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 
     net::select_return_t ret { 0, 0, 0 };
 
-    for (Item& item : fdlist) {
+    for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::read;
+            item.sevents = item.sevents | READ;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::write;
+            item.sevents = item.sevents | WRITE;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | net::select::EventFlags::except;
+            item.sevents = item.sevents | EXCEPT;
             ret.exceptions++;
         }
     }

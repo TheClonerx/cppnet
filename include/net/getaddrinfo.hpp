@@ -26,10 +26,11 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
 {
     static_assert(std::is_same<decltype(*start = addrinfo(), std::true_type()), std::true_type>::value, "Iterator value type must be assignable to net::addrinfo");
     ::addrinfo hints;
-    hints.ai_flags = flags;
+
     hints.ai_family = family;
     hints.ai_socktype = type;
     hints.ai_protocol = protocol;
+    hints.ai_flags = flags;
 
     ::addrinfo* addrlist;
     int r = ::getaddrinfo(node, service, &hints, &addrlist);

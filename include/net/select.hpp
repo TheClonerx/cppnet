@@ -12,33 +12,36 @@ struct select_return_t {
 
 class select {
 public:
-    enum class EventFlags : unsigned {
-        read = 1,
-        write = 2,
-        except = 4
-    };
+    static constexpr int READ = 1;
+    static constexpr int WRITE = 2;
+    static constexpr int EXCEPT = 4;
 
-    bool add(int fd, EventFlags events);
-    bool remove(int fd, EventFlags events);
+    bool add(int fd, int events);
+    bool modify(int fd, int events);
+    bool remove(int fd);
 
-    select_return_t execute(std::optional<std::chrono::microseconds> microseconds = std::nullopt);
-    select_return_t execute(std::optional<std::chrono::microseconds> microseconds, std::error_code&) noexcept;
+    select_return_t execute(std::optional<std::chrono::microseconds> timeout);
+    select_return_t execute(std::optional<std::chrono::microseconds> timeout, std::error_code&) noexcept;
 
 #ifdef _GNU_SOURCE
-    select_return_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask);
-    select_return_t execute(std::optional<std::chrono::nanoseconds> nanoseconds, const sigset_t& sigmask, std::error_code&) noexcept;
+    select_return_t execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask);
+    select_return_t execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask, std::error_code&) noexcept;
 #endif
 
     // ranges
 
     template <typename It>
-    It get(It start, It stop, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
+    It get(It start, It stop, int events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
     {
         for (const auto& item : fdlist) {
             if (start == stop)
                 return stop;
             if (
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))) {
+                (events & READ   && item.sevents & READ  ) ||
+                (events & WRITE  && item.sevents & WRITE ) ||
+                (events & EXCEPT && item.sevents & EXCEPT)
+            )
+            {
                 *start = item.fd;
                 ++start;
             }
@@ -49,11 +52,15 @@ public:
     // inserters
 
     template <typename It>
-    void get(It start, EventFlags events) const noexcept(noexcept(*start = 0) && noexcept(++start))
+    void get(It start, int events) const noexcept(noexcept(*start = 0) && noexcept(++start))
     {
         for (const auto& item : fdlist) {
             if (
-                (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::read) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::read)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::write) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::write)) || (static_cast<unsigned>(events) & static_cast<unsigned>(EventFlags::except) && static_cast<unsigned>(item.sevents) & static_cast<unsigned>(EventFlags::except))) {
+                (events & READ   && item.sevents & READ  ) ||
+                (events & WRITE  && item.sevents & WRITE ) ||
+                (events & EXCEPT && item.sevents & EXCEPT)
+            )
+            {
                 *start = item.fd;
                 ++start;
             }
@@ -62,32 +69,12 @@ public:
     }
 
 private:
-    struct Item {
+    struct selectfd {
         int fd;
-        EventFlags events; // events to select
-        EventFlags sevents; // selected events
+        int events; // events to select
+        int sevents; // selected events
     };
 
-    std::list<Item> fdlist;
+    std::list<selectfd> fdlist;
 };
-}
-
-inline net::select::EventFlags operator|(net::select::EventFlags lhs, net::select::EventFlags rhs)
-{
-    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) | static_cast<unsigned>(rhs));
-}
-
-inline net::select::EventFlags operator&(net::select::EventFlags lhs, net::select::EventFlags rhs)
-{
-    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) & static_cast<unsigned>(rhs));
-}
-
-inline net::select::EventFlags operator^(net::select::EventFlags lhs, net::select::EventFlags rhs)
-{
-    return static_cast<net::select::EventFlags>(static_cast<unsigned>(lhs) ^ static_cast<unsigned>(rhs));
-}
-
-inline bool operator!(net::select::EventFlags rhs)
-{
-    return !static_cast<unsigned>(rhs);
 }
