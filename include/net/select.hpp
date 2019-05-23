@@ -30,42 +30,28 @@ public:
 
     // ranges
 
-    template <typename It>
-    It get(It start, It stop, int events) const noexcept(noexcept(*start = 0) && noexcept(++start == stop))
+    template <typename OIt>
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
     {
         for (const auto& item : fdlist) {
             if (start == stop)
                 return stop;
-            if (
-                (events & READ   && item.sevents & READ  ) ||
-                (events & WRITE  && item.sevents & WRITE ) ||
-                (events & EXCEPT && item.sevents & EXCEPT)
-            )
-            {
-                *start = item.fd;
-                ++start;
-            }
+            *start = std::make_pair(item.fd, item.sevents);
+            ++start;
         }
         return start;
     }
 
     // inserters
 
-    template <typename It>
-    void get(It start, int events) const noexcept(noexcept(*start = 0) && noexcept(++start))
+    template <typename OIt>
+    void get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
     {
         for (const auto& item : fdlist) {
-            if (
-                (events & READ   && item.sevents & READ  ) ||
-                (events & WRITE  && item.sevents & WRITE ) ||
-                (events & EXCEPT && item.sevents & EXCEPT)
-            )
-            {
-                *start = item.fd;
-                ++start;
-            }
+            *it = std::make_pair(item.fd, item.sevents);
+            ++it;
         }
-        return start;
+        return it;
     }
 
 private:

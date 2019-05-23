@@ -42,26 +42,24 @@ public:
     int fileno() const noexcept;
 
     // ranges
-    template <typename It>
-    It get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
+    template <typename OIt>
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
     {
         for (const epoll_event& item : data) {
             if (start == stop)
                 return stop;
-            std::get<0>(*start) = item.data.fd;
-            std::get<1>(*start) = item.events;
+            *start = std::make_pair(item.data.fd, item.events);
             ++start;
         }
         return start;
     }
 
     // inserters
-    template <typename It>
-    It get(It it) const noexcept(noexcept(std::get<0>(*it) = 0) && noexcept(std::get<1>(*it) = 0) && noexcept(++it))
+    template <typename OIt>
+    OIt get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
     {
         for (const epoll_event& item : data) {
-            std::get<0>(*it) = item.data.fd;
-            std::get<1>(*it) = item.events;
+            *it = std::make_pair(item.data.fd, item.events);
             ++it;
         }
         return it;

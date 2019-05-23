@@ -26,16 +26,14 @@ public:
 #endif
 
     // ranges
-
-    template <typename It>
-    It get(It start, It stop) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start == stop))
+    template <typename OIt>
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
     {
         for (const pollfd& fd : fds) {
             if (start == stop)
                 return stop;
             if (fd.revents) {
-                std::get<0>(*start) = fd.fd;
-                std::get<1>(*start) = fd.revents;
+                *start = std::make_pair(fd.fd, fd.revents);
                 ++start;
             }
         }
@@ -43,18 +41,16 @@ public:
     }
 
     // inserters
-
-    template <typename It>
-    It get(It start) const noexcept(noexcept(std::get<0>(*start) = 0) && noexcept(std::get<1>(*start) = 0) && noexcept(++start))
+    template <typename OIt>
+    OIt get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
     {
         for (const pollfd& fd : fds) {
             if (fd.revents) {
-                std::get<0>(*start) = fd.fd;
-                std::get<1>(*start) = fd.revents;
-                ++start;
+                *it = std::make_pair(fd.fd, fd.revents);
+                ++it;
             }
         }
-        return start;
+        return it;
     }
 
 private:
