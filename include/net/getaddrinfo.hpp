@@ -134,7 +134,7 @@ inline addrinfo& getaddrinfo(addrinfo& ainfo, const char* host, const char* serv
 inline addrinfo getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
 {
     addrinfo ainfo;
-    return getaddrinfo(ainfo, service, host, family, type, protocol, flags);
+    return getaddrinfo(ainfo, host, service, family, type, protocol, flags);
 }
 inline addrinfo getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
