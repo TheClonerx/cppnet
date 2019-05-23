@@ -1,8 +1,8 @@
 #pragma once
 #include <chrono>
-#include <list>
 #include <optional>
 #include <system_error>
+#include <vector>
 
 namespace net {
 
@@ -61,6 +61,6 @@ private:
         int sevents; // selected events
     };
 
-    std::list<selectfd> fdlist;
+    std::vector<selectfd> fdlist;
 };
 }
