@@ -1,13 +1,16 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.8)
 project(cppnet)
 
+find_package(Threads)
+
 include_directories(${CMAKE_SOURCE_DIR}/include)
+
 add_library(cppnet src/epoll.cpp src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket.cpp src/utils.cpp)
 target_compile_features(cppnet PUBLIC cxx_std_17)
 
 add_executable(example_getaddrinfo src/examples/example_getaddrinfo.cpp)
 target_compile_features(example_getaddrinfo PUBLIC cxx_std_17)
-target_link_libraries(example_getaddrinfo cppnet pthread)
+target_link_libraries(example_getaddrinfo cppnet ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(example_poll src/examples/example_poll.cpp)
 target_compile_features(example_poll PUBLIC cxx_std_17)
