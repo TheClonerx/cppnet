@@ -5,7 +5,7 @@
 #ifdef _WIN32
 #define POLL_FUNCTION WSAPoll
 #else
-#define POLL_FUNCTIO poll
+#define POLL_FUNCTION poll
 #endif
 
 bool net::poll::add(impl::socket_handle fd, short eventmask)
