@@ -7,14 +7,22 @@
 
 // if someone is going to use net::poll
 // they may need some constats defined here
+#ifdef _WIN32
+#include <WinSock2.h>
+#else
 #include <poll.h>
+#endif
+
+#include "net/impl_types.hpp"
+
+
 
 namespace net {
 class poll {
 public:
-    bool add(int fd, short events);
-    bool modify(int fd, short events);
-    bool remove(int fd);
+    bool add(impl::socket_handle fd, short events);
+    bool modify(impl::socket_handle fd, short events);
+    bool remove(impl::socket_handle fd);
 
     size_t execute(std::optional<std::chrono::milliseconds> timeout);
     size_t execute(std::optional<std::chrono::milliseconds> timeout, std::error_code&) noexcept;

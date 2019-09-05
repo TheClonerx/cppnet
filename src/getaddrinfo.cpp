@@ -1,7 +1,14 @@
 #include "net/getaddrinfo.hpp"
+#ifdef _WIN32
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+#else
 #include <netdb.h>
 #include <sys/socket.h>
+#endif
 #include <sys/types.h>
+
+
 
 const std::error_category& net::addrinfo_category()
 {
@@ -15,7 +22,11 @@ const std::error_category& net::addrinfo_category()
         }
         std::string message(int ecode) const override
         {
-            return gai_strerror(ecode);
+#ifdef _WIN32
+				return gai_strerrorA(ecode);
+#else
+				return gai_strerror(ecode);
+#endif
         }
         bool equivalent(int ecode, std::error_condition const& econd) const noexcept override
         {

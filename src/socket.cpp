@@ -7,14 +7,20 @@
 #include <tuple>
 #include <utility>
 
-#include <arpa/inet.h>
 #include <cstdlib>
+#include <cstdint>
 #include <fcntl.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
+
+#ifdef _WIN32
+#include <Winsock2.h>
+#else
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <netinet/in.h>
+#include <netinet/ip.h>
+#include <arpa/inet.h>
+#endif
 
 #define THROW_ERRNO throw std::system_error(errno, std::system_category())
 #define ASSIGN_ERRNO(e) e.assign(errno, std::system_category())
@@ -27,6 +33,12 @@
         ASSIGN_ERRNO(e);       \
     else                       \
         ASSIGN_ZERO(e)
+
+#ifdef _WIN32
+#define CLOSE_SOCKET closesocket
+#else
+#define CLOSE_SOCKET close
+#endif
 
 net::socket::socket()
     : net::socket(AF_INET, SOCK_STREAM, 0)
@@ -66,10 +78,10 @@ net::socket::socket(int family, int type, int proto, std::error_code& e) noexcep
 net::socket::~socket() noexcept
 {
     if (fd >= 0)
-        ::close(fd); // ignore error
+        ::CLOSE_SOCKET(fd); // ignore error
 }
 
-net::socket net::socket::from_fileno(int fd) noexcept
+net::socket net::socket::from_fileno(native_handle_type fd) noexcept
 {
     // net::socket is just a wraper around an int
     return reinterpret_cast<net::socket&&>(fd);
@@ -77,13 +89,41 @@ net::socket net::socket::from_fileno(int fd) noexcept
 
 std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int proto)
 {
-    int fds[2];
-    CHECK_FOR_THROW(::socketpair(family, type, proto, fds));
-    return { net::socket::from_fileno(fds[0]), net::socket::from_fileno(fds[1]) };
+	std::error_code e;
+	auto ret = pair(family, type, proto, e);
+	if (e)
+		throw std::system_error(e);
+	return ret;
 }
 
 std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int proto, std::error_code& e) noexcept
 {
+#ifdef _WIN32
+	auto sock1 = net::socket{ family, type, proto, e };
+	auto sock2 = net::socket::from_fileno(INVALID_SOCKET);
+	if (e) goto win_error;
+
+	sock2 = net::socket{ family, type, proto, e };
+	if (e) goto win_error;
+
+	sock1.listen(1, e);
+	if (e) goto win_error;
+
+	sock1.bind(net::localhost, 0, e);
+	if (e) goto win_error;
+
+	SOCKADDR_STORAGE addr;
+	int size = sizeof(addr);
+	CHECK_FOR_ASSIGN(::getsockname(sock1.fileno(), (sockaddr*)&addr, &size), e);
+	if (e) goto win_error;
+
+	sock2.connect((const sockaddr*)&addr, size, e);
+	if (e) goto win_error;
+
+	return { std::move(sock1), std::move(sock2) };
+win_error:
+	return { net::socket::from_fileno(INVALID_SOCKET), net::socket::from_fileno(INVALID_SOCKET) };
+#else
     int fds[2];
     if (::socketpair(family, type, proto, fds) < 0) {
         ASSIGN_ERRNO(e);
@@ -92,50 +132,60 @@ std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int 
         ASSIGN_ZERO(e);
         return { net::socket::from_fileno(fds[0]), net::socket::from_fileno(fds[1]) };
     }
+#endif
 }
 
 net::socket net::socket::dup() const
 {
-    int r = ::dup(fd);
-    CHECK_FOR_THROW(r);
-    return net::socket::from_fileno(r);
+	std::error_code e;
+	auto sock = dup(e);
+	if (e)
+		throw std::system_error(e);
+	return sock;
 }
 
 net::socket net::socket::dup(std::error_code& e) const noexcept
 {
+#ifdef _WIN32
+	SOCKET handle;
+	// TODO: Error checking
+	DuplicateHandle(GetCurrentProcess(), (HANDLE)fileno(), GetCurrentProcess(), (HANDLE*)&handle, 0, FALSE, DUPLICATE_SAME_ACCESS);
+	return net::socket::from_fileno(handle);
+#else
     int r = ::dup(fd);
     CHECK_FOR_ASSIGN(r, e);
     return net::socket::from_fileno(r);
+#endif
 }
 
 size_t net::socket::recv(void* buff, size_t size, int flags)
 {
-    ssize_t ret = ::recv(fd, buff, size, flags);
+    impl::ssize_t ret = ::recv(fd, reinterpret_cast<char*>(buff), size, flags);
     CHECK_FOR_THROW(ret);
     return ret;
 }
 
 size_t net::socket::recv(void* buff, size_t size, int flags, std::error_code& e) noexcept
 {
-    ssize_t ret = ::recv(fd, buff, size, flags);
+	impl::ssize_t ret = ::recv(fd, reinterpret_cast<char*>(buff), size, flags);
     CHECK_FOR_ASSIGN(ret, e);
     return ret;
 }
 
-size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, socklen_t* addrlen)
+size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, impl::socklen_t* addrlen)
 {
-    ssize_t ret = ::recvfrom(fd, buff, size, flags, addr, addrlen);
+	impl::ssize_t ret = ::recvfrom(fd, reinterpret_cast<char*>(buff), size, flags, addr, addrlen);
     CHECK_FOR_THROW(ret);
     return ret;
 }
 
-size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, socklen_t* addrlen, std::error_code& e) noexcept
+size_t net::socket::recvfrom(void* buff, size_t size, int flags, sockaddr* addr, impl::socklen_t* addrlen, std::error_code& e) noexcept
 {
-    ssize_t ret = ::recvfrom(fd, buff, size, flags, addr, addrlen);
+	impl::ssize_t ret = ::recvfrom(fd, reinterpret_cast<char*>(buff), size, flags, addr, addrlen);
     CHECK_FOR_ASSIGN(ret, e);
     return ret;
 }
-
+#ifndef _WIN32
 size_t net::socket::recvmsg(msghdr* msg, int flags)
 {
     ssize_t ret = ::recvmsg(fd, msg, flags);
@@ -149,49 +199,49 @@ size_t net::socket::recvmsg(msghdr* msg, int flags, std::error_code& e) noexcept
     CHECK_FOR_ASSIGN(ret, e);
     return ret;
 }
-
+#endif
 size_t net::socket::send(const void* buff, size_t size, int flags)
 {
-    ssize_t r = ::send(fd, buff, size, flags);
+	impl::ssize_t r = ::send(fd, reinterpret_cast<const char*>(buff), size, flags);
     CHECK_FOR_THROW(r);
     return r;
 }
 
 size_t net::socket::send(const void* buff, size_t size, int flags, std::error_code& e) noexcept
 {
-    ssize_t r = ::send(fd, buff, size, flags);
+	impl::ssize_t r = ::send(fd, reinterpret_cast<const char*>(buff), size, flags);
     CHECK_FOR_ASSIGN(r, e);
     return r;
 }
 
 size_t net::socket::send(std::string_view b, int flags)
 {
-    ssize_t r = ::send(fd, b.data(), b.size(), flags);
+	impl::ssize_t r = ::send(fd, b.data(), b.size(), flags);
     CHECK_FOR_THROW(r);
     return r;
 }
 
 size_t net::socket::send(std::string_view b, int flags, std::error_code& e) noexcept
 {
-    ssize_t r = ::send(fd, b.data(), b.size(), flags);
+	impl::ssize_t r = ::send(fd, b.data(), b.size(), flags);
     CHECK_FOR_ASSIGN(r, e);
     return r;
 }
 
-size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, socklen_t addrlen)
+size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, impl::socklen_t addrlen)
 {
-    ssize_t r = ::sendto(fd, buff, size, flags, addr, addrlen);
+	impl::ssize_t r = ::sendto(fd, reinterpret_cast<const char*>(buff), size, flags, addr, addrlen);
     CHECK_FOR_THROW(r);
     return r;
 }
 
-size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, socklen_t addrlen, std::error_code& e) noexcept
+size_t net::socket::sendto(const void* buff, size_t size, int flags, const sockaddr* addr, impl::socklen_t addrlen, std::error_code& e) noexcept
 {
-    ssize_t r = ::sendto(fd, buff, size, flags, addr, addrlen);
+	impl::ssize_t r = ::sendto(fd, reinterpret_cast<const char*>(buff), size, flags, addr, addrlen);
     CHECK_FOR_ASSIGN(r, e);
     return r;
 }
-
+#ifndef _WIN32
 size_t net::socket::sendmsg(const msghdr* msg, int flags)
 {
     ssize_t r = ::sendmsg(fd, msg, flags);
@@ -205,12 +255,12 @@ size_t net::socket::sendmsg(const msghdr* msg, int flags, std::error_code& e) no
     CHECK_FOR_ASSIGN(r, e);
     return r;
 }
-
-void net::socket::connect(const sockaddr* addr, socklen_t addr_len) {
+#endif
+void net::socket::connect(const sockaddr* addr, impl::socklen_t addr_len) {
     CHECK_FOR_THROW(::connect(fd, addr, addr_len));
 }
 
-void net::socket::connect(const sockaddr* addr, socklen_t addr_len, std::error_code& e) noexcept {
+void net::socket::connect(const sockaddr* addr, impl::socklen_t addr_len, std::error_code& e) noexcept {
     CHECK_FOR_ASSIGN(::connect(fd, addr, addr_len), e);
 }
 
@@ -230,28 +280,28 @@ void net::socket::connect(std::string_view addr, uint16_t port, std::error_code&
 
 net::socket net::socket::accept()
 {
-    int r = ::accept(fd, nullptr, nullptr);
+	impl::socket_handle r = ::accept(fd, nullptr, nullptr);
     CHECK_FOR_THROW(r);
     return net::socket::from_fileno(r);
 }
 
 net::socket net::socket::accept(std::error_code& e) noexcept
 {
-    int r = ::accept(fd, nullptr, nullptr);
+	impl::socket_handle r = ::accept(fd, nullptr, nullptr);
     CHECK_FOR_ASSIGN(r, e);
     return net::socket::from_fileno(r);
 }
 
-net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen)
+net::socket net::socket::accept(sockaddr& addr, impl::socklen_t& socklen)
 {
-    int r = ::accept(fd, &addr, &socklen);
+	impl::socket_handle r = ::accept(fd, &addr, &socklen);
     CHECK_FOR_THROW(r);
     return net::socket::from_fileno(r);
 }
 
-net::socket net::socket::accept(sockaddr& addr, socklen_t& socklen, std::error_code& e) noexcept
+net::socket net::socket::accept(sockaddr& addr, impl::socklen_t& socklen, std::error_code& e) noexcept
 {
-    int r = ::accept(fd, &addr, &socklen);
+    impl::socket_handle r = ::accept(fd, &addr, &socklen);
     CHECK_FOR_ASSIGN(r, e);
     return net::socket::from_fileno(r);
 }
@@ -346,42 +396,39 @@ void net::socket::bind(net::localhost_t, uint16_t port, std::error_code& e) noex
     CHECK_FOR_ASSIGN(::bind(fd, reinterpret_cast<const sockaddr*>(&sa), sizeof(sa)), e);
 }
 
-void net::socket::getsockopt(int level, int optname, void* optval, socklen_t* optlen) const
+void net::socket::getsockopt(int level, int optname, void* optval, impl::socklen_t* optlen) const
 {
-    CHECK_FOR_THROW(::getsockopt(fd, level, optname, optval, optlen));
+    CHECK_FOR_THROW(::getsockopt(fd, level, optname, reinterpret_cast<char*>(optval), optlen));
 }
 
-void net::socket::getsockopt(int level, int optname, void* optval, socklen_t* optlen, std::error_code& e) const noexcept
+void net::socket::getsockopt(int level, int optname, void* optval, impl::socklen_t* optlen, std::error_code& e) const noexcept
 {
-    CHECK_FOR_ASSIGN(::getsockopt(fd, level, optname, optval, optlen), e);
+    CHECK_FOR_ASSIGN(::getsockopt(fd, level, optname, reinterpret_cast<char*>(optval), optlen), e);
 }
 
-void net::socket::setsockopt(int level, int optname, void* optval, socklen_t optlen)
+void net::socket::setsockopt(int level, int optname, const void* optval, impl::socklen_t optlen)
 {
-    CHECK_FOR_THROW(::setsockopt(fd, level, optname, optval, optlen));
+    CHECK_FOR_THROW(::setsockopt(fd, level, optname, reinterpret_cast<const char*>(optval), optlen));
 }
 
-void net::socket::setsockopt(int level, int optname, void* optval, socklen_t optlen, std::error_code& e) noexcept
+void net::socket::setsockopt(int level, int optname, const void* optval, impl::socklen_t optlen, std::error_code& e) noexcept
 {
-    CHECK_FOR_ASSIGN(::setsockopt(fd, level, optname, optval, optlen), e);
+    CHECK_FOR_ASSIGN(::setsockopt(fd, level, optname, reinterpret_cast<const char*>(optval), optlen), e);
 }
 
 void net::socket::setblocking(bool block)
 {
-    int r = fcntl(fd, F_GETFL);
-    CHECK_FOR_THROW(r);
-    int new_flags;
-    if (block)
-        new_flags = r & (~O_NONBLOCK);
-    else
-        new_flags = r | O_NONBLOCK;
-    if (new_flags != r)
-        r = fcntl(fd, F_SETFL, new_flags);
-    CHECK_FOR_THROW(r);
+	std::error_code e;
+	setblocking(block, e);
+	if (e) throw std::system_error(e);
 }
 
 void net::socket::setblocking(bool block, std::error_code& e) noexcept
 {
+#ifdef _WIN32
+	u_long arg = 1;
+	CHECK_FOR_ASSIGN(ioctlsocket(fd, FIONBIO, &arg), e);
+#else
     int r = fcntl(fd, F_GETFL);
     if (r < 0) {
         ASSIGN_ERRNO(e);
@@ -395,21 +442,31 @@ void net::socket::setblocking(bool block, std::error_code& e) noexcept
     if (new_flags != r)
         r = fcntl(fd, F_SETFL, new_flags);
     CHECK_FOR_ASSIGN(r, e);
+#endif
 }
 
-int net::socket::fileno() const noexcept
+net::socket::native_handle_type net::socket::fileno() const noexcept
 {
     return fd;
 }
 
 int net::socket::family() const
 {
-    return getsockopt<int>(SOL_SOCKET, SO_DOMAIN);
+#ifdef _WIN32
+	return getsockopt<WSAPROTOCOL_INFOW>(SOL_SOCKET, SO_PROTOCOL_INFOW).iAddressFamily;
+#else
+	return getsockopt<int>(SOL_SOCKET, SO_DOMAIN);
+#endif
+    
 }
 
 int net::socket::family(std::error_code& e) const noexcept
 {
-    return getsockopt<int>(SOL_SOCKET, SO_DOMAIN, e);
+#ifdef _WIN32
+	return getsockopt<WSAPROTOCOL_INFOW>(SOL_SOCKET, SO_PROTOCOL_INFOW, e).iAddressFamily;
+#else
+	return getsockopt<int>(SOL_SOCKET, SO_DOMAIN, e);
+#endif
 }
 
 int net::socket::type() const
@@ -424,20 +481,28 @@ int net::socket::type(std::error_code& e) const noexcept
 
 int net::socket::protocol() const
 {
+#ifdef _WIN32
+	return getsockopt<WSAPROTOCOL_INFOW>(SOL_SOCKET, SO_PROTOCOL_INFOW).iProtocol;
+#else
     return getsockopt<int>(SOL_SOCKET, SO_PROTOCOL);
+#endif
 }
 
 int net::socket::protocol(std::error_code& e) const noexcept
 {
+#ifdef _WIN32
+	return getsockopt<WSAPROTOCOL_INFOW>(SOL_SOCKET, SO_PROTOCOL_INFOW, e).iProtocol;
+#else
     return getsockopt<int>(SOL_SOCKET, SO_PROTOCOL, e);
+#endif
 }
 
-bool net::socket::is_accepting() const
+bool net::socket::accepting() const
 {
     return getsockopt<int>(SOL_SOCKET, SO_ACCEPTCONN);
 }
 
-bool net::socket::is_accepting(std::error_code& e) const noexcept
+bool net::socket::accepting(std::error_code& e) const noexcept
 {
     return getsockopt<int>(SOL_SOCKET, SO_ACCEPTCONN, e);
 }
@@ -454,13 +519,13 @@ void net::socket::shutdown(int how, std::error_code& e) noexcept
 
 void net::socket::close()
 {
-    CHECK_FOR_THROW(::close(fd));
+    CHECK_FOR_THROW(::CLOSE_SOCKET(fd));
     fd = -1;
 }
 
 void net::socket::close(std::error_code& e) noexcept
 {
-    if (::close(fd) < 0)
+    if (::CLOSE_SOCKET(fd) < 0)
         ASSIGN_ERRNO(e);
     else {
         ASSIGN_ZERO(e);

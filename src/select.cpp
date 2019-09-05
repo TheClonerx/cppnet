@@ -1,7 +1,7 @@
 #include "net/select.hpp"
 #include <algorithm>
 
-bool net::select::add(int fd, int events)
+bool net::select::add(impl::socket_handle fd, int events)
 {
 
     auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
@@ -15,7 +15,7 @@ bool net::select::add(int fd, int events)
     return true;
 }
 
-bool net::select::remove(int fd)
+bool net::select::remove(impl::socket_handle fd)
 {
     auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
         return item.fd == fd;
@@ -31,6 +31,8 @@ bool net::select::remove(int fd)
 
 net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout)
 {
+	using namespace std::chrono;
+	using namespace std::literals;
     if (fdlist.empty())
         return { 0, 0, 0 };
 
@@ -46,9 +48,10 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     for (auto& item : fdlist) {
         item.sevents = 0;
+#ifndef _WIN32
         if (maxfd < item.fd)
             maxfd = item.fd;
-
+#endif
         if (item.events & READ)
             FD_SET(item.fd, &rlist);
         if (item.events & WRITE)
@@ -61,8 +64,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-            tm.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(*timeout).count();
-            tm.tv_usec = timeout->count() % std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)).count();
+            tm.tv_sec = duration_cast<seconds>(*timeout).count();
+            tm.tv_usec = (*timeout % 1s).count();
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0)
@@ -89,6 +92,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
 net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout, std::error_code& e) noexcept
 {
+	using namespace std::chrono;
+	using namespace std::literals;
     if (fdlist.empty())
         return { 0, 0, 0 };
 
@@ -104,8 +109,10 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     for (auto& item : fdlist) {
         item.sevents = 0;
-        if (maxfd < item.fd)
-            maxfd = item.fd;
+#ifndef _WIN32
+		if (maxfd < item.fd)
+			maxfd = item.fd;
+#endif
 
         if (item.events & READ)
             FD_SET(item.fd, &rlist);
@@ -119,8 +126,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-            tm.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(*timeout).count();
-            tm.tv_usec = timeout->count() % std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)).count();
+			tm.tv_sec = duration_cast<seconds>(*timeout).count();
+			tm.tv_usec = (*timeout % 1s).count();
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0) {

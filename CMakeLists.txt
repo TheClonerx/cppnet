@@ -7,6 +7,9 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_library(cppnet src/epoll.cpp src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket.cpp src/utils.cpp)
 target_compile_features(cppnet PUBLIC cxx_std_17)
+if(WIN32)
+	target_link_libraries(cppnet wsock32 ws2_32)
+endif()
 
 add_executable(example_getaddrinfo src/examples/example_getaddrinfo.cpp)
 target_compile_features(example_getaddrinfo PUBLIC cxx_std_17)

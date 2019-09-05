@@ -1,8 +1,14 @@
 #include "net/poll.hpp"
 #include <algorithm>
-#include <poll.h>
 
-bool net::poll::add(int fd, short eventmask)
+
+#ifdef _WIN32
+#define POLL_FUNCTION WSAPoll
+#else
+#define POLL_FUNCTIO poll
+#endif
+
+bool net::poll::add(impl::socket_handle fd, short eventmask)
 {
     if (fd < 0)
         return false;
@@ -17,7 +23,7 @@ bool net::poll::add(int fd, short eventmask)
     return true;
 }
 
-bool net::poll::modify(int fd, short eventmask)
+bool net::poll::modify(impl::socket_handle fd, short eventmask)
 {
     if (fd < 0)
         return false;
@@ -32,7 +38,7 @@ bool net::poll::modify(int fd, short eventmask)
     return true;
 }
 
-bool net::poll::remove(int fd)
+bool net::poll::remove(impl::socket_handle fd)
 {
     if (fd < 0)
         return false;
@@ -51,7 +57,7 @@ size_t net::poll::execute(std::optional<std::chrono::milliseconds> timeout)
 {
     for (pollfd& fd : fds)
         fd.revents = 0;
-    int ret = ::poll(fds.data(), fds.size(), timeout ? timeout->count() : -1);
+    int ret = ::POLL_FUNCTION(fds.data(), fds.size(), timeout ? timeout->count() : -1);
     if (ret < 0)
         throw std::system_error(errno, std::system_category());
     return ret;
@@ -61,7 +67,7 @@ size_t net::poll::execute(std::optional<std::chrono::milliseconds> timeout, std:
 {
     for (pollfd& fd : fds)
         fd.revents = 0;
-    int ret = ::poll(fds.data(), fds.size(), timeout ? timeout->count() : -1);
+    int ret = ::POLL_FUNCTION(fds.data(), fds.size(), timeout ? timeout->count() : -1);
     if (ret < 0)
         e.assign(errno, std::system_category());
     return ret;

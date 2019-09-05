@@ -4,6 +4,8 @@
 #include <system_error>
 #include <vector>
 
+#include "net/impl_types.hpp"
+
 namespace net {
 
 struct select_return_t {
@@ -16,9 +18,9 @@ public:
     static constexpr int WRITE = 2;
     static constexpr int EXCEPT = 4;
 
-    bool add(int fd, int events);
-    bool modify(int fd, int events);
-    bool remove(int fd);
+    bool add(impl::socket_handle fd, int events);
+    bool modify(impl::socket_handle fd, int events);
+    bool remove(impl::socket_handle fd);
 
     select_return_t execute(std::optional<std::chrono::microseconds> timeout);
     select_return_t execute(std::optional<std::chrono::microseconds> timeout, std::error_code&) noexcept;
@@ -56,7 +58,7 @@ public:
 
 private:
     struct selectfd {
-        int fd;
+		impl::socket_handle fd;
         int events; // events to select
         int sevents; // selected events
     };
