@@ -1,7 +1,7 @@
 #include "net/select.hpp"
 #include <algorithm>
 
-bool net::select::add(impl::socket_handle fd, int events)
+bool net::select::add(socket::native_handle_type fd, int events)
 {
 
     auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
@@ -15,7 +15,7 @@ bool net::select::add(impl::socket_handle fd, int events)
     return true;
 }
 
-bool net::select::remove(impl::socket_handle fd)
+bool net::select::remove(socket::native_handle_type fd)
 {
     auto it = std::find_if(fdlist.begin(), fdlist.end(), [fd](const selectfd& item) {
         return item.fd == fd;

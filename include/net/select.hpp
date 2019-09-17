@@ -4,7 +4,7 @@
 #include <system_error>
 #include <vector>
 
-#include "net/impl_types.hpp"
+#include "net/socket.hpp"
 
 namespace net {
 
@@ -18,9 +18,9 @@ public:
     static constexpr int WRITE = 2;
     static constexpr int EXCEPT = 4;
 
-    bool add(impl::socket_handle fd, int events);
-    bool modify(impl::socket_handle fd, int events);
-    bool remove(impl::socket_handle fd);
+    bool add(socket::native_handle_type fd, int events);
+    bool modify(socket::native_handle_type fd, int events);
+    bool remove(socket::native_handle_type fd);
 
     select_return_t execute(std::optional<std::chrono::microseconds> timeout);
     select_return_t execute(std::optional<std::chrono::microseconds> timeout, std::error_code&) noexcept;
@@ -58,7 +58,7 @@ public:
 
 private:
     struct selectfd {
-		impl::socket_handle fd;
+		socket::native_handle_type fd;
         int events; // events to select
         int sevents; // selected events
     };

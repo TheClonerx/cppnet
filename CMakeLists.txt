@@ -5,10 +5,13 @@ find_package(Threads)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
-add_library(cppnet src/epoll.cpp src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket.cpp src/utils.cpp)
+add_library(cppnet src/epoll.cpp src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket_common_impl.cpp)
 target_compile_features(cppnet PUBLIC cxx_std_17)
 if(WIN32)
+	target_sources(cppnet PRIVATE src/socket_win32_impl.cpp)
 	target_link_libraries(cppnet wsock32 ws2_32)
+else()
+	target_sources(cppnet PRIVATE src/socket_unix_impl.cpp)
 endif()
 
 add_executable(example_getaddrinfo src/examples/example_getaddrinfo.cpp)

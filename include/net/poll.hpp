@@ -5,24 +5,22 @@
 #include <utility>
 #include <vector>
 
-// if someone is going to use net::poll
-// they may need some constats defined here
 #ifdef _WIN32
 #include <WinSock2.h>
 #else
+// if someone is going to use net::poll
+// they may need some constats defined here
 #include <poll.h>
 #endif
 
-#include "net/impl_types.hpp"
-
-
+#include "net/socket.hpp"
 
 namespace net {
 class poll {
 public:
-    bool add(impl::socket_handle fd, short events);
-    bool modify(impl::socket_handle fd, short events);
-    bool remove(impl::socket_handle fd);
+    bool add(socket::native_handle_type fd, short events);
+    bool modify(socket::native_handle_type fd, short events);
+    bool remove(socket::native_handle_type fd);
 
     size_t execute(std::optional<std::chrono::milliseconds> timeout);
     size_t execute(std::optional<std::chrono::milliseconds> timeout, std::error_code&) noexcept;

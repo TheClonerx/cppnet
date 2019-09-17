@@ -6,27 +6,22 @@
 #include <sys/types.h>
 
 #ifdef _WIN32
-#include <WinSock2.h>
 #include <WS2tcpip.h>
+#include <WinSock2.h>
 #else
-#include <sys/socket.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #endif
 
-#include "net/impl_types.hpp"
-
 namespace net {
 
-	
-
-const std::error_category& addrinfo_category();
+const std::error_category& addrinfo_category() noexcept;
 
 struct addrinfo {
     int family;
     int type;
     int protocol;
-    impl::socklen_t addrlen;
+    size_t addrlen;
     sockaddr_storage addr;
     std::string canonname;
 };
@@ -49,8 +44,8 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
         e.assign(errno, std::system_category());
         return start;
     } else
-#endif 
-	if (r != 0) {
+#endif
+        if (r != 0) {
         e.assign(r, addrinfo_category());
         return start;
     } else
@@ -66,7 +61,7 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
             i->ai_family,
             i->ai_socktype,
             i->ai_protocol,
-            (impl::socklen_t)i->ai_addrlen,
+            i->ai_addrlen,
             std::move(tmp),
             i->ai_canonname ? i->ai_canonname : std::string()
         };
@@ -92,8 +87,8 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
         e.assign(errno, std::system_category());
         return it;
     } else
-#endif 
-	if (r != 0) {
+#endif
+        if (r != 0) {
         e.assign(r, addrinfo_category());
         return it;
     } else
@@ -108,7 +103,7 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
             i->ai_family,
             i->ai_socktype,
             i->ai_protocol,
-            (impl::socklen_t)i->ai_addrlen,
+            i->ai_addrlen,
             std::move(tmp),
             i->ai_canonname ? i->ai_canonname : std::string()
         };

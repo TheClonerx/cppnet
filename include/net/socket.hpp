@@ -1,6 +1,4 @@
 #pragma once
-#include <memory>
-#include <string>
 #include <string_view>
 #include <system_error>
 #include <utility>
@@ -12,8 +10,6 @@
 #include <sys/socket.h>
 #endif
 
-#include "net/impl_types.hpp"
-
 namespace net {
 
 constexpr struct any_addr_t {
@@ -22,80 +18,74 @@ constexpr struct any_addr_t {
 constexpr struct localhost_t {
 } localhost;
 
+const std::error_category& socket_category() noexcept;
+
 class socket {
 public:
-	using native_handle_type = impl::socket_handle;
+#ifdef _WIN32
+    using native_handle_type = SOCKET;
+    static constexpr native_handle_type invalid_handle = INVALID_SOCKET;
+#else
+    using native_handle_type = int;
+    static constexpr native_handle_type invalid_handle = -1;
+#endif
 
-    socket(); // may trow
+    socket() noexcept = default;
+
     socket(socket&&) noexcept;
     socket& operator=(socket&&) noexcept;
+
     socket(const socket&) = delete;
     socket& operator=(const socket&) = delete;
-    ~socket() noexcept;
 
-    explicit socket(std::error_code&) noexcept;
+    ~socket() noexcept;
 
     socket(int family, int type, int protocol);
     socket(int family, int type, int protocol, std::error_code&) noexcept;
 
+private:
+    static constexpr struct from_native_handle_t {
+    } from_native_handle {};
+    socket(from_native_handle_t, native_handle_type);
+
+public:
     static std::pair<socket, socket> pair(int family = AF_UNIX, int type = SOCK_STREAM, int protocol = 0);
     static std::pair<socket, socket> pair(int family, int type, int protocol, std::error_code&) noexcept;
-
-    static socket from_fileno(native_handle_type fd) noexcept;
 
     socket dup() const;
     socket dup(std::error_code&) const noexcept;
 
-    size_t recv(void* buffer, size_t size, int flags = 0);
-    size_t recv(void* buffer, size_t size, int flags, std::error_code&) noexcept;
+    size_t recv(void* buffer, size_t buffer_size, int flags = 0);
+    size_t recv(void* buffer, size_t buffer_size, int flags, std::error_code&) noexcept;
 
-    size_t recvfrom(void* buffer, size_t size, int flags, sockaddr* address, impl::socklen_t* address_size);
-    size_t recvfrom(void* buffer, size_t size, int flags, sockaddr* address, impl::socklen_t* address_size, std::error_code&) noexcept;
+    size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size);
+    size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size, std::error_code&) noexcept;
 
-#ifndef _WIN32
-    size_t recvmsg(msghdr* message, int flags = 0);
-    size_t recvmsg(msghdr* message, int flags, std::error_code&) noexcept;
-#endif
-    size_t send(const void* buffer, size_t size, int flags = 0);
-    size_t send(const void* buffer, size_t size, int flags, std::error_code&) noexcept;
+    size_t send(const void* buffer, size_t buffer_size, int flags = 0);
+    size_t send(const void* buffer, size_t buffer_size, int flags, std::error_code&) noexcept;
 
     size_t send(std::string_view buffer, int flags = 0);
     size_t send(std::string_view buffer, int flags, std::error_code&) noexcept;
 
-    size_t sendto(const void* buffer, size_t size, int flags, const sockaddr* address, impl::socklen_t address_size);
-    size_t sendto(const void* buffer, size_t size, int flags, const sockaddr* address, impl::socklen_t address_size, std::error_code&) noexcept;
-#ifndef _WIN32
-    size_t sendmsg(const msghdr* message, int flags = 0);
-    size_t sendmsg(const msghdr* message, int flags, std::error_code&) noexcept;
-#endif
-    void connect(const sockaddr* address, impl::socklen_t address_size);
-    void connect(const sockaddr* address, impl::socklen_t address_size, std::error_code&) noexcept;
+    size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size);
+    size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size, std::error_code&) noexcept;
+
+    void connect(const sockaddr* address, size_t address_size);
+    void connect(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
     // begin ipv4
     void connect(std::string_view host, uint16_t port);
     void connect(std::string_view host, uint16_t port, std::error_code&) noexcept;
     // end ipv4
 
-    socket accept();
-    socket accept(std::error_code&) noexcept;
-
-    socket accept(sockaddr& address, impl::socklen_t& address_size);
-    socket accept(sockaddr& address, impl::socklen_t& address_size, std::error_code&) noexcept;
-
-// for accept4
-#ifdef _GNU_SOURCE
-    socket accept(int flags);
-    socket accept(int flags, std::error_code&) noexcept;
-
-    socket accept(sockaddr& address, socklen_t& address_size, int flags);
-    socket accept(sockaddr& address, socklen_t& address_size, int flags, std::error_code&) noexcept;
-#endif
+    socket accept(sockaddr* address = nullptr, size_t* address_size = nullptr);
+    socket accept(sockaddr* address, size_t* address_size, std::error_code&) noexcept;
 
     void listen(int backlog);
     void listen(int backlog, std::error_code&) noexcept;
 
-    void bind(const sockaddr* address, impl::socklen_t address_size);
-    void bind(const sockaddr* address, impl::socklen_t address_size, std::error_code&) noexcept;
+    void bind(const sockaddr* address, size_t address_size);
+    void bind(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
     // begin ipv4
     // NOTE: std::string_view variant may works under ipv6, since it
@@ -110,11 +100,11 @@ public:
     void bind(localhost_t, uint16_t port, std::error_code&) noexcept;
     // end ipv4
 
-    void getsockopt(int level, int optname, void* optval, impl::socklen_t* optlen) const;
-    void getsockopt(int level, int optname, void* optval, impl::socklen_t* optlen, std::error_code&) const noexcept;
+    void getsockopt(int level, int optname, void* optval, size_t* optlen) const;
+    void getsockopt(int level, int optname, void* optval, size_t* optlen, std::error_code&) const noexcept;
 
-    void setsockopt(int level, int optname, const void* optval, impl::socklen_t optlen, std::error_code&) noexcept;
-    void setsockopt(int level, int optname, const void* optval, impl::socklen_t optlen);
+    void setsockopt(int level, int optname, const void* optval, size_t optlen, std::error_code&) noexcept;
+    void setsockopt(int level, int optname, const void* optval, size_t optlen);
 
     void setblocking(bool);
     void setblocking(bool, std::error_code&) noexcept;
@@ -122,7 +112,7 @@ public:
     template <typename T>
     T getsockopt(int level, int optname) const
     {
-        impl::socklen_t optlen = sizeof(T);
+        size_t optlen = sizeof(T);
         // we don't want to default-initialize T
         // (T optval; getsockopt(level, optname, &optval, &optlen);)
         // so we just create a stack buffer
@@ -134,7 +124,7 @@ public:
     template <typename T>
     T getsockopt(int level, int optname, std::error_code& e) const noexcept
     {
-		impl::socklen_t optlen = sizeof(T);
+        size_t optlen = sizeof(T);
         // we don't want to default-initialize T
         // (T optval; getsockopt(level, optname, &optval, &optlen);)
         // so we just create a stack buffer and move it later
@@ -155,7 +145,7 @@ public:
         setsockopt(level, optname, &optval, sizeof(T), e);
     }
 
-	native_handle_type fileno() const noexcept;
+    native_handle_type native_handle() noexcept;
 
     int family() const;
     int family(std::error_code&) const noexcept;
@@ -169,8 +159,8 @@ public:
     bool accepting() const;
     bool accepting(std::error_code&) const noexcept;
 
-    void shutdown(int);
-    void shutdown(int, std::error_code&) noexcept;
+    void shutdown(int way);
+    void shutdown(int way, std::error_code&) noexcept;
 
     void close();
     void close(std::error_code&) noexcept;
@@ -178,10 +168,10 @@ public:
     friend void swap(socket& lhs, socket& rhs) noexcept
     {
         using std::swap;
-        swap(lhs.fd, rhs.fd);
+        swap(lhs.m_Handle, rhs.m_Handle);
     }
 
 protected:
-	native_handle_type fd;
+    native_handle_type m_Handle = invalid_handle;
 };
 } // namespace net

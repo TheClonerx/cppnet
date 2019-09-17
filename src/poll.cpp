@@ -8,7 +8,7 @@
 #define POLL_FUNCTION poll
 #endif
 
-bool net::poll::add(impl::socket_handle fd, short eventmask)
+bool net::poll::add(socket::native_handle_type fd, short eventmask)
 {
     if (fd < 0)
         return false;
@@ -23,7 +23,7 @@ bool net::poll::add(impl::socket_handle fd, short eventmask)
     return true;
 }
 
-bool net::poll::modify(impl::socket_handle fd, short eventmask)
+bool net::poll::modify(socket::native_handle_type fd, short eventmask)
 {
     if (fd < 0)
         return false;
@@ -38,7 +38,7 @@ bool net::poll::modify(impl::socket_handle fd, short eventmask)
     return true;
 }
 
-bool net::poll::remove(impl::socket_handle fd)
+bool net::poll::remove(socket::native_handle_type fd)
 {
     if (fd < 0)
         return false;
