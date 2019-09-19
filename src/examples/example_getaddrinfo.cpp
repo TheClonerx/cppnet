@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "net/getaddrinfo.hpp"
-#include "net/utils.hpp"
+//#include "net/utils.hpp"
 
 std::mutex cerr_mutex;
 
@@ -13,6 +13,19 @@ void test_back_inserter(std::back_insert_iterator<std::list<net::addrinfo>>, con
 void test_range(const char*, const char*);
 void test_reference(const char*, const char*);
 void test_return(const char*, const char*);
+
+#include <arpa/inet.h>
+#include <sys/un.h>
+
+std::string addr_to_str(const sockaddr_storage* addr)
+{
+    char buffer[1024] { 0 };
+    if (addr->ss_family == AF_INET)
+        return inet_ntop(AF_INET, &reinterpret_cast<const sockaddr_in*>(addr)->sin_addr, buffer, std::size(buffer));
+    else if (addr->ss_family == AF_INET6)
+        return inet_ntop(AF_INET6, &reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr, buffer, std::size(buffer));
+    return "?";
+}
 
 int main(int argc, const char* argv[]) try {
     if (argc < 2 || argc > 3) {
@@ -42,7 +55,7 @@ int main(int argc, const char* argv[]) try {
         std::cout << "\tFamily: " << ainfo.family
                   << "\tType: " << ainfo.type
                   << "\tProtocol: " << ainfo.protocol
-                  << "\tAddress: " << net::addr_to_str(&ainfo.addr);
+                  << "\tAddress: " << addr_to_str(&ainfo.addr);
         if (!ainfo.canonname.empty())
             std::cout << "\tCanon name: " << ainfo.canonname;
         std::cout << '\n';
