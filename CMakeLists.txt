@@ -3,14 +3,27 @@ project(cppnet)
 
 find_package(Threads)
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(include)
 
-add_library(cppnet src/epoll.cpp src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket_common_impl.cpp)
+add_library(cppnet)
+target_include_directories(cppnet PUBLIC include)
 target_compile_features(cppnet PUBLIC cxx_std_17)
-if(WIN32)
+
+target_sources(cppnet PRIVATE src/getaddrinfo.cpp src/poll.cpp src/select.cpp src/socket_common_impl.cpp)
+
+if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
+	# Linux specific
+	target_sources(cppnet PRIVATE src/epoll.cpp)
+endif()
+
+if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Windows")
+	# Windows specific
 	target_sources(cppnet PRIVATE src/socket_win32_impl.cpp)
 	target_link_libraries(cppnet wsock32 ws2_32)
-else()
+endif()
+
+if(UNIX)
+	# Unix specific
 	target_sources(cppnet PRIVATE src/socket_unix_impl.cpp)
 endif()
 
