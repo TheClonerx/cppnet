@@ -7,13 +7,6 @@
 #define ASSIGN_ERRNO(e) e.assign(errno, std::system_category())
 #define ASSIGN_ZERO(e) e.assign(0, std::system_category())
 
-const std::error_category& net::socket_category() noexcept
-{
-    // unix uses errno for socket errors
-    // so it's a system error
-    return std::system_category();
-}
-
 net::socket::socket(int family, int type, int protocol)
     : m_Handle(::socket(family, type, protocol))
 {
@@ -132,24 +125,6 @@ void net::socket::bind(const sockaddr* addr, size_t addrlen, std::error_code& e)
         ASSIGN_ERRNO(e);
     else
         ASSIGN_ZERO(e);
-}
-
-void net::socket::bind(net::any_addr_t, uint16_t port, std::error_code& e) noexcept
-{
-    sockaddr_in sa {};
-    sa.sin_family = AF_INET;
-    sa.sin_addr.s_addr = INADDR_ANY;
-    sa.sin_port = htons(port);
-    bind(reinterpret_cast<const sockaddr*>(&sa), sizeof(sa), e);
-}
-
-void net::socket::bind(net::localhost_t, uint16_t port, std::error_code& e) noexcept
-{
-    sockaddr_in sa {};
-    sa.sin_family = AF_INET;
-    sa.sin_addr.s_addr = INADDR_LOOPBACK;
-    sa.sin_port = htons(port);
-    bind(reinterpret_cast<const sockaddr*>(&sa), sizeof(sa), e);
 }
 
 void net::socket::getsockopt(int level, int optname, void* optval, size_t* optlen, std::error_code& e) const noexcept

@@ -10,15 +10,9 @@
 #include <sys/socket.h>
 #endif
 
+#include <net/address.hpp>
+
 namespace net {
-
-constexpr struct any_addr_t {
-} any_addr;
-
-constexpr struct localhost_t {
-} localhost;
-
-const std::error_category& socket_category() noexcept;
 
 class socket {
 public:
@@ -61,6 +55,16 @@ public:
     size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size);
     size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size, std::error_code&) noexcept;
 
+    inline size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr)
+    {
+        return recvfrom(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size);
+    }
+
+    inline size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr, std::error_code& e) noexcept
+    {
+        return recvfrom(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size, e);
+    }
+
     size_t send(const void* buffer, size_t buffer_size, int flags = 0);
     size_t send(const void* buffer, size_t buffer_size, int flags, std::error_code&) noexcept;
 
@@ -70,16 +74,51 @@ public:
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size);
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
+    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address& addr)
+    {
+        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
+    }
+
+    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address& addr, std::error_code& e) noexcept
+    {
+        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
+    }
+
     void connect(const sockaddr* address, size_t address_size);
     void connect(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    // begin ipv4
-    void connect(std::string_view host, uint16_t port);
-    void connect(std::string_view host, uint16_t port, std::error_code&) noexcept;
-    // end ipv4
+    inline void connect(const address& addr)
+    {
+        connect(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
+    }
 
-    socket accept(sockaddr* address = nullptr, size_t* address_size = nullptr);
+    inline void connect(const address& addr, std::error_code& e) noexcept
+    {
+        connect(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
+    }
+
+    socket accept(sockaddr* address, size_t* address_size);
     socket accept(sockaddr* address, size_t* address_size, std::error_code&) noexcept;
+
+    inline socket accept()
+    {
+        return accept(nullptr, nullptr);
+    }
+
+    inline socket accept(std::error_code& e) noexcept
+    {
+        return accept(nullptr, nullptr, e);
+    }
+
+    inline socket accept(address& addr)
+    {
+        return accept(reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size);
+    }
+
+    inline socket accept(address& addr, std::error_code& e) noexcept
+    {
+        return accept(reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size, e);
+    }
 
     void listen(int backlog);
     void listen(int backlog, std::error_code&) noexcept;
@@ -87,18 +126,15 @@ public:
     void bind(const sockaddr* address, size_t address_size);
     void bind(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    // begin ipv4
-    // NOTE: std::string_view variant may works under ipv6, since it
-    //       works with getaddrinfo (resolving to an actual ipv6 address).
-    void bind(std::string_view host, uint16_t port);
-    void bind(std::string_view host, uint16_t port, std::error_code&) noexcept;
+    inline void bind(const address& addr, std::error_code& e) noexcept
+    {
+        bind(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
+    }
 
-    void bind(any_addr_t, uint16_t port);
-    void bind(any_addr_t, uint16_t port, std::error_code&) noexcept;
-
-    void bind(localhost_t, uint16_t port);
-    void bind(localhost_t, uint16_t port, std::error_code&) noexcept;
-    // end ipv4
+    inline void bind(const address& addr)
+    {
+        bind(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
+    }
 
     void getsockopt(int level, int optname, void* optval, size_t* optlen) const;
     void getsockopt(int level, int optname, void* optval, size_t* optlen, std::error_code&) const noexcept;
