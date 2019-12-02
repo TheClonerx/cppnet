@@ -33,13 +33,13 @@ public:
 
     // ranges
     template <typename OIt>
-    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = { 0, 0 }) && noexcept(++start == stop))
     {
         for (const pollfd& fd : fds) {
             if (start == stop)
                 return stop;
             if (fd.revents) {
-                *start = std::make_pair(fd.fd, fd.revents);
+                *start = { fd.fd, fd.revents };
                 ++start;
             }
         }
@@ -48,11 +48,11 @@ public:
 
     // inserters
     template <typename OIt>
-    OIt get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
+    OIt get(OIt it) const noexcept(noexcept(*it = { 0, 0 }) && noexcept(++it))
     {
         for (const pollfd& fd : fds) {
             if (fd.revents) {
-                *it = std::make_pair(fd.fd, fd.revents);
+                *it = { fd.fd, fd.revents };
                 ++it;
             }
         }

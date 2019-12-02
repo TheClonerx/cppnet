@@ -1,6 +1,6 @@
 #pragma once
 #ifndef __linux__
-#error epoll is only avilable for linux
+#error epoll is only avilable in linux
 #endif
 
 #include <chrono>
@@ -43,12 +43,12 @@ public:
 
     // ranges
     template <typename OIt>
-    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = { 0, 0 }) && noexcept(++start == stop))
     {
         for (const epoll_event& item : data) {
             if (start == stop)
                 return stop;
-            *start = std::make_pair(item.data.fd, item.events);
+            *start = { item.data.fd, item.events };
             ++start;
         }
         return start;
@@ -56,10 +56,10 @@ public:
 
     // inserters
     template <typename OIt>
-    OIt get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
+    OIt get(OIt it) const noexcept(noexcept(*it = { 0, 0 }) && noexcept(++it))
     {
         for (const epoll_event& item : data) {
-            *it = std::make_pair(item.data.fd, item.events);
+            *it = { item.data.fd, item.events };
             ++it;
         }
         return it;

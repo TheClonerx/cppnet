@@ -14,9 +14,11 @@ struct select_return_t {
 
 class select {
 public:
-    static constexpr int READ = 1;
-    static constexpr int WRITE = 2;
-    static constexpr int EXCEPT = 4;
+    enum {
+        READ = 1 << 0,
+        WRITE = 1 << 1,
+        EXCEPT = 1 << 2,
+    };
 
     bool add(socket::native_handle_type fd, int events);
     bool modify(socket::native_handle_type fd, int events);
@@ -33,12 +35,12 @@ public:
     // ranges
 
     template <typename OIt>
-    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = std::make_pair(0, 0)) && noexcept(++start == stop))
+    OIt get(OIt start, OIt stop) const noexcept(noexcept(*start = { 0, 0 }) && noexcept(++start == stop))
     {
         for (const auto& item : fdlist) {
             if (start == stop)
                 return stop;
-            *start = std::make_pair(item.fd, item.sevents);
+            *start = { item.fd, item.sevents };
             ++start;
         }
         return start;
@@ -47,10 +49,10 @@ public:
     // inserters
 
     template <typename OIt>
-    void get(OIt it) const noexcept(noexcept(*it = std::make_pair(0, 0)) && noexcept(++it))
+    void get(OIt it) const noexcept(noexcept(*it = { 0, 0 }) && noexcept(++it))
     {
         for (const auto& item : fdlist) {
-            *it = std::make_pair(item.fd, item.sevents);
+            *it = { item.fd, item.sevents };
             ++it;
         }
         return it;
@@ -58,7 +60,7 @@ public:
 
 private:
     struct selectfd {
-		socket::native_handle_type fd;
+        socket::native_handle_type fd;
         int events; // events to select
         int sevents; // selected events
     };
