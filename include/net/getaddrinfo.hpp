@@ -9,7 +9,7 @@
 #include <WS2tcpip.h>
 #include <WinSock2.h>
 #else
-#include <netdb.h>
+#include <netdb.h> // struct addrinfo, getaddrinfo, freeaddrinfo, EAI_SYSTEM
 #include <sys/socket.h>
 #endif
 
@@ -18,7 +18,7 @@ namespace net {
 const std::error_category& addrinfo_category() noexcept;
 
 struct addrinfo {
-    int family;
+    int family; // redundant
     int type;
     int protocol;
     size_t addrlen;
@@ -29,7 +29,7 @@ struct addrinfo {
 template <typename It>
 It getaddrinfo(It start, It stop, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
-    static_assert(std::is_same<decltype(*start = addrinfo(), std::true_type()), std::true_type>::value, "Iterator value type must be assignable to net::addrinfo");
+    static_assert(std::is_assignable_v<decltype(*start), addrinfo>, "Iterator value type must be assignable to net::addrinfo");
     ::addrinfo hints;
 
     hints.ai_family = family;
@@ -73,7 +73,7 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
 template <typename It>
 It getaddrinfo(It it, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
-    static_assert(std::is_same<decltype(*it = addrinfo(), std::true_type()), std::true_type>::value, "Iterator value type must be assignable to net::addrinfo");
+    static_assert(std::is_assignable_v<decltype(*it), addrinfo>, "Iterator value type must be assignable to net::addrinfo");
     ::addrinfo hints;
     hints.ai_flags = flags;
     hints.ai_family = family;
