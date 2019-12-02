@@ -4,49 +4,51 @@
 This project aims to create an intuitive and easy to use wrappers around the linux system calls
 
 ## Building
-Building is easy as typing `make` in your terminal! :)
-
-This will build the shared library and the examples.
+This will build the library and the examples.
 ```bash
 git clone https://github.com/TheClonerx/cppnet.git
 cd cppnet
-make
+mkdir build
+cmake -S ./ -B build/
+cmake --build build/ --parallel $(nproc)
 ```
 
 ## Running the examples
 ```bash
-export LD_LIBRARY_PATH="$PWD/lib"
 ./bin/examples/example_getaddrinfo google.net 80
 ```
 
 ## Installing
-You can also easily install it in a any directory.
-
-This will copy the headers and the shared library into `MyProject`.
-```bash
-make install INSTALL_DIR=MyProject
-```
+`TODO: ` Add install instructions to CMakeLists.txt
 
 ## Example
 
 main.cpp
 ```cpp
 #include <iostream>
-#include <net/socket.hpp>
 #include <string_view>
+#include <net/socket.hpp>
+#include <net/getaddrinfo.hpp>
 
 int main()
 {
-    net::socket sock;
-    sock.connect("google.net", 80);
+    // get the address info for google
+    net::addrinfo ainfo = net::getaddrinfo("www.google.net", "80");
+    // create of socket for the returned address info
+    net::socket sock{ ainfo.family, ainfo.type, ainfo.protocol };
+    // connect (implicit conversion from net::addrinfo to net::address)
+    sock.connect(ainfo);
+    // send a basic HTTP 1.0 request
     sock.send("GET / HTTP/1.0\r\n\r\n");
     char buff[2048];
+    // receive up to 2048 bytes
     size_t recived = sock.recv(buff, sizeof(buff));
+    // print out the received bytes
     std::cout << std::string_view{ buff, recived } << std::endl;
 }
 ```
 
-building
+### Building
 ```bash
-g++ -Wall -Wextra -Iinclude/ -Llibs/ -lcppnet main.cpp -o main 
+g++ -Wall -Wextra -Iinclude/ -Lbuild/ -lcppnet main.cpp -o main 
 ```
