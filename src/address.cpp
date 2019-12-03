@@ -1,11 +1,6 @@
 #include <net/address.hpp>
 #include <net/getaddrinfo.hpp>
 
-net::address::address(const net::addrinfo& ainfo) noexcept
-    : m_socket_address { ainfo.addr }
-    , m_socket_address_size { ainfo.addrlen }
-{
-}
 
 net::address net::address::from_ipv4(std::string_view host, uint16_t port)
 {

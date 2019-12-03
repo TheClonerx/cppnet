@@ -13,23 +13,41 @@
 #include <sys/socket.h>
 #endif
 
+#include <net/address.hpp>
+
 namespace net {
 
 const std::error_category& addrinfo_category() noexcept;
 
-struct addrinfo {
-    int family; // redundant
-    int type;
-    int protocol;
-    size_t addrlen;
-    sockaddr_storage addr;
-    std::string canonname;
+class address_info {
+public:
+    address_info() noexcept = default;
+
+    int family() const noexcept;
+    int type() const noexcept;
+    int protocol() const noexcept;
+    const net::address& address() const noexcept;
+    std::string_view canon_name() const noexcept;
+
+private:
+    template <typename It>
+    friend It getaddrinfo(It, It, const char*, const char*, int, int, int, int, std::error_code&) noexcept;
+    template <typename It>
+    friend It getaddrinfo(It, const char*, const char*, int, int, int, int, std::error_code&) noexcept;
+
+    address_info(int, int, int, const sockaddr*, size_t, const char*) noexcept;
+
+private:
+    int m_type = -1;
+    int m_protocol = -1;
+    net::address m_address;
+    std::string m_canonname;
 };
 
 template <typename It>
 It getaddrinfo(It start, It stop, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
-    static_assert(std::is_assignable_v<decltype(*start), addrinfo>, "Iterator value type must be assignable to net::addrinfo");
+    static_assert(std::is_assignable_v<decltype(*start), address_info>, "Iterator value type must be assignable to net::address_info");
     ::addrinfo hints;
 
     hints.ai_family = family;
@@ -51,20 +69,14 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
     } else
         e.assign(0, std::system_category());
 
-    sockaddr_storage tmp;
-
     for (::addrinfo* i = addrlist; i != nullptr && start != stop; i = i->ai_next, ++start) {
-        // man pages doe
-        std::copy(reinterpret_cast<char*>(i->ai_addr), reinterpret_cast<char*>(i->ai_addr) + i->ai_addrlen, reinterpret_cast<char*>(&tmp));
-        std::fill_n(reinterpret_cast<char*>(&tmp) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
-        *start = addrinfo {
+        *start = address_info(
             i->ai_family,
             i->ai_socktype,
             i->ai_protocol,
+            i->ai_addr,
             i->ai_addrlen,
-            std::move(tmp),
-            i->ai_canonname ? i->ai_canonname : std::string()
-        };
+            i->ai_canonname);
     }
     ::freeaddrinfo(addrlist);
     return start;
@@ -73,7 +85,7 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
 template <typename It>
 It getaddrinfo(It it, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
-    static_assert(std::is_assignable_v<decltype(*it), addrinfo>, "Iterator value type must be assignable to net::addrinfo");
+    static_assert(std::is_assignable_v<decltype(*it), address_info>, "Iterator value type must be assignable to net::address_info");
     ::addrinfo hints;
     hints.ai_flags = flags;
     hints.ai_family = family;
@@ -94,19 +106,14 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
     } else
         e.assign(0, std::system_category());
 
-    sockaddr_storage tmp;
-
     for (::addrinfo* i = addrlist; i != nullptr; i = i->ai_next, ++it) {
-        std::copy(reinterpret_cast<char*>(i->ai_addr), reinterpret_cast<char*>(i->ai_addr) + i->ai_addrlen, reinterpret_cast<char*>(&tmp));
-        std::fill_n(reinterpret_cast<char*>(&tmp) + i->ai_addrlen, sizeof(sockaddr_storage) - i->ai_addrlen, 0);
-        *it = addrinfo {
+        *it = address_info(
             i->ai_family,
             i->ai_socktype,
             i->ai_protocol,
+            i->ai_addr,
             i->ai_addrlen,
-            std::move(tmp),
-            i->ai_canonname ? i->ai_canonname : std::string()
-        };
+            i->ai_canonname);
     }
     ::freeaddrinfo(addrlist);
     return it;
@@ -132,24 +139,24 @@ It getaddrinfo(It it, const char* host, const char* service, int family = 0, int
     return ret;
 }
 
-inline addrinfo& getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
+inline address_info& getaddrinfo(address_info& ainfo, const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
 {
     getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
     return ainfo;
 }
-inline addrinfo& getaddrinfo(addrinfo& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
+inline address_info& getaddrinfo(address_info& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
     return ainfo;
 }
-inline addrinfo getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
+inline address_info getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
 {
-    addrinfo ainfo;
+    address_info ainfo;
     return getaddrinfo(ainfo, host, service, family, type, protocol, flags);
 }
-inline addrinfo getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
+inline address_info getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
-    addrinfo ainfo;
+    address_info ainfo;
     return getaddrinfo(ainfo, host, service, family, type, protocol, flags, e);
 }
 

@@ -43,3 +43,36 @@ const std::error_category& net::addrinfo_category() noexcept
     const static addrinfo_category_t val {};
     return val;
 }
+
+net::address_info::address_info(int /*family*/, int type, int protocol, const sockaddr* addr, size_t len, const char* canonname) noexcept
+    : m_type { type }
+    , m_protocol { protocol }
+    , m_address { addr, len }
+    , m_canonname { canonname ? canonname : std::string() }
+{
+}
+
+int net::address_info::family() const noexcept
+{
+    return m_address.family();
+}
+
+int net::address_info::type() const noexcept
+{
+    return m_type;
+}
+
+int net::address_info::protocol() const noexcept
+{
+    return m_protocol;
+}
+
+const net::address& net::address_info::address() const noexcept
+{
+    return m_address;
+}
+
+std::string_view net::address_info::canon_name() const noexcept
+{
+    return m_canonname;
+}

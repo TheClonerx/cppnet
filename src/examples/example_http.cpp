@@ -14,11 +14,11 @@ constexpr auto request =
 int main() try {
 
     std::cout << "Resolving..." << std::endl;
-    net::addrinfo ainfo = net::getaddrinfo("www.lua.org", "80");
-    net::socket sock { ainfo.family, ainfo.type, ainfo.protocol };
+    net::address_info ainfo = net::getaddrinfo("www.lua.org", "80");
+    net::socket sock { ainfo.family(), ainfo.type(), ainfo.protocol() };
 
     std::cout << "Connecting..." << std::endl;
-    sock.connect(reinterpret_cast<const sockaddr*>(&ainfo.addr), ainfo.addrlen);
+    sock.connect(ainfo.address());
     std::cout << "Connected." << std::endl;
 
     std::cout << "Sending request..." << std::endl;

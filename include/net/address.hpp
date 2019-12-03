@@ -41,9 +41,28 @@ public:
     constexpr address& operator=(const address&) noexcept = default;
     constexpr address& operator=(address&&) noexcept = default;
 
-    address(const addrinfo& ainfo) noexcept;
+    address(sockaddr_storage addr, size_t len)
+        : m_socket_address { addr }
+        , m_socket_address_size { len }
+    {
+    }
 
-    static address from_ipv4(std::string_view host, uint16_t port);
+private:
+    inline static sockaddr_storage sockaddr_storage_from_sockaddr_and_size(const sockaddr* addr, size_t size)
+    {
+        sockaddr_storage ret {};
+        std::memcpy(&ret, addr, size);
+        return ret;
+    }
+
+public:
+    inline address(const sockaddr* addr, size_t len)
+        : m_socket_address { sockaddr_storage_from_sockaddr_and_size(addr, len) }
+        , m_socket_address_size { len }
+    {
+    }
+
+        static address from_ipv4(std::string_view host, uint16_t port);
     static address from_ipv4(any_addr_t, uint16_t port) noexcept;
     static address from_ipv4(localhost_t, uint16_t port) noexcept;
 
@@ -53,9 +72,19 @@ public:
 
     static address from_unix(std::string_view path);
 
-    constexpr int family() const noexcept
+    constexpr uint16_t family() const noexcept
     {
         return m_socket_address.ss_family;
+    }
+
+    inline const sockaddr* address_pointer() const noexcept
+    {
+        return reinterpret_cast<const sockaddr*>(&m_socket_address);
+    }
+
+    constexpr std::size_t address_size() const noexcept
+    {
+        return m_socket_address_size;
     }
 
 private:

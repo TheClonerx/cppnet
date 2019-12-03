@@ -9,21 +9,25 @@
 
 std::mutex cerr_mutex;
 
-void test_back_inserter(std::back_insert_iterator<std::list<net::addrinfo>>, const char*, const char*);
+void test_back_inserter(std::back_insert_iterator<std::list<net::address_info>>, const char*, const char*);
 void test_range(const char*, const char*);
 void test_reference(const char*, const char*);
 void test_return(const char*, const char*);
 
 #include <arpa/inet.h>
-#include <sys/un.h>
 
-std::string addr_to_str(const sockaddr_storage* addr)
+std::string addr_to_str(const sockaddr* addr)
 {
-    char buffer[1024] { 0 };
-    if (addr->ss_family == AF_INET)
-        return inet_ntop(AF_INET, &reinterpret_cast<const sockaddr_in*>(addr)->sin_addr, buffer, std::size(buffer));
-    else if (addr->ss_family == AF_INET6)
-        return inet_ntop(AF_INET6, &reinterpret_cast<const sockaddr_in6*>(addr)->sin6_addr, buffer, std::size(buffer));
+    char buffer[64] { 0 };
+    if (addr->sa_family == AF_INET) {
+        auto in_addr = reinterpret_cast<const sockaddr_in*>(addr);
+        inet_ntop(AF_INET, &in_addr->sin_addr, buffer, std::size(buffer));
+        return buffer + (':' + std::to_string(ntohs(in_addr->sin_port)));
+    } else if (addr->sa_family == AF_INET6) {
+        auto in6_addr = reinterpret_cast<const sockaddr_in6*>(addr);
+        inet_ntop(AF_INET6, &in6_addr->sin6_addr, buffer, std::size(buffer));
+        return "[" + (buffer + ("]:" + std::to_string(ntohs(in6_addr->sin6_port))));
+    }
     return "?";
 }
 
@@ -35,7 +39,7 @@ int main(int argc, const char* argv[]) try {
 
     const char* service = (argc == 3) ? argv[2] : nullptr;
 
-    std::list<net::addrinfo> ainfos;
+    std::list<net::address_info> ainfos;
 
     std::thread t1(test_back_inserter, std::back_inserter(ainfos), argv[1], service);
     std::thread t2(test_range, argv[1], service);
@@ -51,13 +55,13 @@ int main(int argc, const char* argv[]) try {
         return EXIT_FAILURE;
 
     std::cout << "Found " << ainfos.size() << " address(es):\n";
-    for (const net::addrinfo& ainfo : ainfos) {
-        std::cout << "\tFamily: " << ainfo.family
-                  << "\tType: " << ainfo.type
-                  << "\tProtocol: " << ainfo.protocol
-                  << "\tAddress: " << addr_to_str(&ainfo.addr);
-        if (!ainfo.canonname.empty())
-            std::cout << "\tCanon name: " << ainfo.canonname;
+    for (const net::address_info& ainfo : ainfos) {
+        std::cout << "\tFamily: " << ainfo.family()
+                  << "\tType: " << ainfo.type()
+                  << "\tProtocol: " << ainfo.protocol()
+                  << "\tAddress: " << addr_to_str(ainfo.address().address_pointer());
+        if (!ainfo.canon_name().empty())
+            std::cout << "\tCanon name: " << ainfo.canon_name();
         std::cout << '\n';
     }
 } catch (std::system_error& e) {
@@ -68,7 +72,7 @@ int main(int argc, const char* argv[]) try {
     std::cerr << "std exception:\n\t" << e.what() << '\n';
 }
 
-void test_back_inserter(std::back_insert_iterator<std::list<net::addrinfo>> it, const char* host, const char* service)
+void test_back_inserter(std::back_insert_iterator<std::list<net::address_info>> it, const char* host, const char* service)
 {
     std::error_code e;
     net::getaddrinfo(it, host, service, 0, 0, 0, AI_CANONNAME, e);
@@ -80,7 +84,7 @@ void test_back_inserter(std::back_insert_iterator<std::list<net::addrinfo>> it, 
 
 void test_range(const char* host, const char* service)
 {
-    std::vector<net::addrinfo> ainfos(10);
+    std::vector<net::address_info> ainfos(10);
     std::error_code e;
     net::getaddrinfo(ainfos.begin(), ainfos.end(), host, service, 0, 0, 0, AI_CANONNAME, e);
     if (e) {
@@ -92,7 +96,7 @@ void test_range(const char* host, const char* service)
 void test_reference(const char* host, const char* service)
 {
     std::error_code e;
-    net::addrinfo addrinfo;
+    net::address_info addrinfo;
     net::getaddrinfo(addrinfo, host, service, 0, 0, 0, AI_CANONNAME, e);
     if (e) {
         std::lock_guard<std::mutex> guard(cerr_mutex);
@@ -103,7 +107,7 @@ void test_reference(const char* host, const char* service)
 void test_return(const char* host, const char* service)
 {
     std::error_code e;
-    net::addrinfo addrinfo = net::getaddrinfo(host, service, 0, 0, 0, AI_CANONNAME, e);
+    net::address_info addrinfo = net::getaddrinfo(host, service, 0, 0, 0, AI_CANONNAME, e);
     if (e) {
         std::lock_guard<std::mutex> guard(cerr_mutex);
         std::cerr << "test_return failed:\t\t" << e.message() << '\n';
