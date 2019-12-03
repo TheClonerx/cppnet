@@ -12,7 +12,7 @@ int main()
     net::poll poll;
     poll.add(0, POLLIN);
     std::cout << "Now polling stdin...\n";
-    size_t polled = poll.execute(5000ms);
+    size_t polled = poll.execute(5s);
     if (!polled)
         std::cout << "Timeout reached!\n";
     else
