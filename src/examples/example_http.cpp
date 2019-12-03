@@ -19,7 +19,6 @@ int main() try {
 
     std::cout << "Connecting..." << std::endl;
     sock.connect(ainfo.address());
-    std::cout << "Connected." << std::endl;
 
     std::cout << "Sending request..." << std::endl;
     sock.send(request);

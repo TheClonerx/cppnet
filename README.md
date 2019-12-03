@@ -19,7 +19,7 @@ cmake --build build/ --parallel $(nproc)
 ```
 
 ## Installing
-`TODO: ` Add install instructions to CMakeLists.txt
+`TODO:` Add install instructions to CMakeLists.txt
 
 ## Example
 
@@ -33,13 +33,13 @@ main.cpp
 int main()
 {
     // get the address info for google
-    net::addrinfo ainfo = net::getaddrinfo("www.google.net", "80");
-    // create of socket for the returned address info
-    net::socket sock{ ainfo.family, ainfo.type, ainfo.protocol };
-    // connect (implicit conversion from net::addrinfo to net::address)
-    sock.connect(ainfo);
-    // send a basic HTTP 1.0 request
-    sock.send("GET / HTTP/1.0\r\n\r\n");
+    net::address_info ainfo = net::getaddrinfo("www.google.net", "80");
+    // create socket for the returned address
+    net::socket sock{ ainfo.family(), ainfo.type(), ainfo.protocol() };
+    // connect to the given address
+    sock.connect(ainfo.address());
+    // send a basic HTTP 1.1 request
+    sock.send("GET / HTTP/1.1\r\n\r\n");
     char buff[2048];
     // receive up to 2048 bytes
     size_t recived = sock.recv(buff, sizeof(buff));
@@ -50,5 +50,5 @@ int main()
 
 ### Building
 ```bash
-g++ -Wall -Wextra -Iinclude/ -Lbuild/ -lcppnet main.cpp -o main 
+g++ -std=c++17 -Wall -Wextra -Iinclude/ -Lbuild/ main.cpp -o main -lcppnet
 ```
