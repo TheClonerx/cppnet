@@ -1,0 +1,5 @@
+{
+    "cmake.configureArgs": [
+        "-DCPPNET_BUILD_EXAMPLES=ON"
+    ]
+}

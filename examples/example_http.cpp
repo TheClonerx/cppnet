@@ -6,7 +6,7 @@
 
 using namespace std::literals;
 
-constexpr auto request = 
+constexpr auto request =
     "GET /manual/5.3/contents.html HTTP/1.1\r\n"
     "Host: www.lua.org\r\n"
     "\r\n"sv;
