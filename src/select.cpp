@@ -64,8 +64,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-            tm.tv_sec = duration_cast<seconds>(*timeout).count();
-            tm.tv_usec = (*timeout % 1s).count();
+            tm.tv_sec = static_cast<decltype(tm.tv_sec)>(duration_cast<seconds>(*timeout).count());
+            tm.tv_usec = static_cast<decltype(tm.tv_usec)>((*timeout % 1s).count());
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0)
@@ -126,8 +126,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-			tm.tv_sec = duration_cast<seconds>(*timeout).count();
-			tm.tv_usec = (*timeout % 1s).count();
+            tm.tv_sec = static_cast<decltype(tm.tv_sec)>(duration_cast<seconds>(*timeout).count());
+            tm.tv_usec = static_cast<decltype(tm.tv_usec)>((*timeout % 1s).count());
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0) {
