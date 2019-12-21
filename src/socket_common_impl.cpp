@@ -7,6 +7,13 @@
     if (e)                 \
     return
 
+/*
+ * IMPORTANT!!
+ * Don't use `errno` here.
+ * Windows errors are not set properly to it.
+ * Use errno in socket_unix_impl.cpp and WSAGetLastError() in socket_win32_impl.cpp
+ */
+
 net::socket::socket(net::socket::from_native_handle_t, net::socket::native_handle_type handle)
     : m_Handle(handle)
 {
@@ -190,4 +197,20 @@ void net::socket::close()
     std::error_code e;
     close(e);
     THROW_IF_ERROR(e);
+}
+
+net::address net::socket::getsockname()
+{
+    std::error_code e;
+    net::address address = getsockname(e);
+    THROW_IF_ERROR(e);
+    return address;
+}
+
+net::address net::socket::getpeername()
+{
+    std::error_code e;
+    net::address address = getpeername(e);
+    THROW_IF_ERROR(e);
+    return address;
 }

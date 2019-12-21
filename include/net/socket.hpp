@@ -39,7 +39,7 @@ public:
 
 private:
     static constexpr struct from_native_handle_t {
-    } from_native_handle {};
+    } from_native_handle{};
     socket(from_native_handle_t, native_handle_type);
 
 public:
@@ -135,6 +135,12 @@ public:
     {
         bind(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
     }
+
+    net::address getsockname(std::error_code&) noexcept;
+    net::address getsockname();
+
+    net::address getpeername(std::error_code&) noexcept;
+    net::address getpeername();
 
     void getsockopt(int level, int optname, void* optval, size_t* optlen) const;
     void getsockopt(int level, int optname, void* optval, size_t* optlen, std::error_code&) const noexcept;

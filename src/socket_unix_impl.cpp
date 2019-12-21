@@ -31,7 +31,7 @@ std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int 
         return {};
     } else {
         ASSIGN_ZERO(e);
-        return { net::socket { from_native_handle, handles[0] }, net::socket { from_native_handle, handles[1] } };
+        return { net::socket{ from_native_handle, handles[0] }, net::socket{ from_native_handle, handles[1] } };
     }
 }
 
@@ -193,4 +193,28 @@ void net::socket::close(std::error_code& e) noexcept
         ASSIGN_ZERO(e);
         m_Handle = invalid_handle;
     }
+}
+
+net::address net::socket::getsockname(std::error_code& e) noexcept
+{
+    sockaddr_storage addr;
+    socklen_t addr_len;
+    int ret = ::getsockname(m_Handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
+    if (ret < 0) {
+        ASSIGN_ERRNO(e);
+        return {};
+    } else
+        return { addr, addr_len };
+}
+
+net::address net::socket::getpeername(std::error_code& e) noexcept
+{
+    sockaddr_storage addr;
+    socklen_t addr_len;
+    int ret = ::getpeername(m_Handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
+    if (ret < 0) {
+        ASSIGN_ERRNO(e);
+        return {};
+    } else
+        return { addr, addr_len };
 }
