@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 3.8)
 project(cppnet)
 
-
-
 option(CPPNET_BUILD_EXAMPLES "Build the cppnet examples" OFF)
 
-include_directories(include)
+# include_directories(include)
 
 add_library(cppnet)
 target_include_directories(cppnet PUBLIC include)

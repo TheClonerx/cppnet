@@ -62,7 +62,7 @@ public:
     {
     }
 
-        static address from_ipv4(std::string_view host, uint16_t port);
+    static address from_ipv4(std::string_view host, uint16_t port);
     static address from_ipv4(any_addr_t, uint16_t port) noexcept;
     static address from_ipv4(localhost_t, uint16_t port) noexcept;
 
@@ -70,7 +70,9 @@ public:
     static address from_ipv6(any_addr_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept;
     static address from_ipv6(localhost_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept;
 
+#ifndef _WIN32
     static address from_unix(std::string_view path);
+#endif
 
     constexpr uint16_t family() const noexcept
     {

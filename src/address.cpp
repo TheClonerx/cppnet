@@ -102,6 +102,7 @@ net::address net::address::from_ipv6(net::localhost_t, uint16_t port, uint32_t f
     return ret;
 }
 
+#ifndef _WIN32
 net::address net::address::from_unix(std::string_view path)
 {
     sockaddr_un addr {};
@@ -120,3 +121,4 @@ net::address net::address::from_unix(std::string_view path)
     ret.m_socket_address_size = len;
     return ret;
 }
+#endif
