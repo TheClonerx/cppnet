@@ -48,25 +48,30 @@ template <typename It>
 It getaddrinfo(It start, It stop, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     static_assert(std::is_assignable_v<decltype(*start), address_info>, "Iterator value type must be assignable to net::address_info");
-    ::addrinfo hints;
+    ::addrinfo hints{};
 
     hints.ai_family = family;
     hints.ai_socktype = type;
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    ::addrinfo* addrlist;
+    ::addrinfo* addrlist{};
     int r = ::getaddrinfo(node, service, &hints, &addrlist);
-#ifndef _WIN32
+#ifdef _WIN32
+    if (r != 0) {
+        e.assign(WSAGetLastError(), std::system_category());
+        return start;
+    }
+#else
     if (r == EAI_SYSTEM) {
         e.assign(errno, std::system_category());
         return start;
-    } else
-#endif
-        if (r != 0) {
+    } else if (r != 0) {
         e.assign(r, addrinfo_category());
         return start;
-    } else
+    }
+#endif
+    else
         e.assign(0, std::system_category());
 
     for (::addrinfo* i = addrlist; i != nullptr && start != stop; i = i->ai_next, ++start) {
@@ -86,7 +91,8 @@ template <typename It>
 It getaddrinfo(It it, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     static_assert(std::is_assignable_v<decltype(*it), address_info>, "Iterator value type must be assignable to net::address_info");
-    ::addrinfo hints;
+    ::addrinfo hints{};
+
     hints.ai_flags = flags;
     hints.ai_family = family;
     hints.ai_socktype = type;
@@ -94,16 +100,21 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
 
     ::addrinfo* addrlist;
     int r = ::getaddrinfo(node, service, &hints, &addrlist);
-#ifndef _WIN32
+#ifdef _WIN32
+    if (r != 0) {
+        e.assign(WSAGetLastError(), std::system_category());
+        return start;
+    }
+#else
     if (r == EAI_SYSTEM) {
         e.assign(errno, std::system_category());
-        return it;
-    } else
-#endif
-        if (r != 0) {
+        return start;
+    } else if (r != 0) {
         e.assign(r, addrinfo_category());
-        return it;
-    } else
+        return start;
+    }
+#endif
+    else
         e.assign(0, std::system_category());
 
     for (::addrinfo* i = addrlist; i != nullptr; i = i->ai_next, ++it) {
@@ -144,20 +155,22 @@ inline address_info& getaddrinfo(address_info& ainfo, const char* host, const ch
     getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
     return ainfo;
 }
+
 inline address_info& getaddrinfo(address_info& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
     return ainfo;
 }
+
 inline address_info getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
 {
     address_info ainfo;
     return getaddrinfo(ainfo, host, service, family, type, protocol, flags);
 }
+
 inline address_info getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     address_info ainfo;
     return getaddrinfo(ainfo, host, service, family, type, protocol, flags, e);
 }
-
 }

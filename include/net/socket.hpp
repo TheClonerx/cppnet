@@ -216,4 +216,5 @@ public:
 protected:
     native_handle_type m_Handle = invalid_handle;
 };
+
 } // namespace net

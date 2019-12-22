@@ -14,7 +14,7 @@ constexpr auto request =
 int main() try {
 
     std::cout << "Resolving..." << std::endl;
-    net::address_info ainfo = net::getaddrinfo("www.lua.org", "80");
+    net::address_info ainfo = net::getaddrinfo("www.lua.org", "80", AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
     net::socket sock { ainfo.family(), ainfo.type(), ainfo.protocol() };
 
     std::cout << "Connecting..." << std::endl;

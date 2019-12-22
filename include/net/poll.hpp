@@ -16,6 +16,7 @@
 #include "net/socket.hpp"
 
 namespace net {
+
 class poll {
 public:
     bool add(socket::native_handle_type fd, short events);
@@ -62,4 +63,5 @@ public:
 private:
     std::vector<pollfd> fds;
 };
-} // net
+
+} // namespace net
