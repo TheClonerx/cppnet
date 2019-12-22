@@ -9,7 +9,7 @@ This will build the library and the examples.
 git clone https://github.com/TheClonerx/cppnet.git
 cd cppnet
 mkdir build
-cmake -S ./ -B build/
+cmake -S ./ -B build/ -DCPPNET_BUILD_EXAMPLES=ON
 cmake --build build/ --parallel $(nproc)
 ```
 
@@ -33,7 +33,7 @@ main.cpp
 int main()
 {
     // get the address info for google
-    net::address_info ainfo = net::getaddrinfo("www.google.net", "80");
+    net::address_info ainfo = net::getaddrinfo("www.google.net", "80", AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
     // create socket for the returned address
     net::socket sock{ ainfo.family(), ainfo.type(), ainfo.protocol() };
     // connect to the given address
