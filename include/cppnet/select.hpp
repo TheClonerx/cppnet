@@ -4,7 +4,7 @@
 #include <system_error>
 #include <vector>
 
-#include <net/socket.hpp>
+#include <cppnet/socket.hpp>
 
 namespace net {
 

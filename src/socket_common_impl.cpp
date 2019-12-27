@@ -1,4 +1,4 @@
-#include "net/socket.hpp"
+#include <cppnet/socket.hpp>
 
 #define THROW_IF_ERROR(e) \
     if (e)                \

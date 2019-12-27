@@ -1,4 +1,4 @@
-#include "net/socket.hpp"
+#include <cppnet/socket.hpp>
 
 #define THROW_LAST_ERROR throw std::system_error(WSAGetLastError(), std::system_category())
 #define ASSIGN_LAST_ERROR(e) e.assign(WSAGetLastError(), std::system_category())

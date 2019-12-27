@@ -1,31 +1,48 @@
-#include "net/getaddrinfo.hpp"
-#include "net/socket.hpp"
+#include <cppnet/getaddrinfo.hpp>
+#include <cppnet/socket.hpp>
 
 #include <iostream>
 #include <string_view>
 
 using namespace std::literals;
 
-constexpr auto request =
-    "GET /manual/5.3/contents.html HTTP/1.1\r\n"
-    "Host: www.lua.org\r\n"
+constexpr auto request = 
+    "GET / HTTP/1.1\r\n"
+    "Host: example.com\r\n"
     "\r\n"sv;
 
-int main() try {
+int main(int argc, const char** argv) try {
 
-    std::cout << "Resolving..." << std::endl;
-    net::address_info ainfo = net::getaddrinfo("www.lua.org", "80", AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
+    size_t max_bytes = 1024;
+
+    if (argc == 2) {
+        if (argv[1] == "-h"sv || argv[1] == "--help"sv) {
+            std::cout << "Usage: " << argv[0] << " [max bytes]\n\n";
+            return EXIT_SUCCESS;
+        }
+        try {
+            max_bytes = std::stoul(argv[1]);
+        } catch (...) {
+            std::cout << "Usage: " << argv[0] << " [max bytes]\n\n";
+            return EXIT_FAILURE;
+        }
+    }
+
+    std::clog << "Resolving..." << std::endl;
+    net::address_info ainfo = net::getaddrinfo("example.com", "80", AF_UNSPEC, SOCK_STREAM);
     net::socket sock { ainfo.family(), ainfo.type(), ainfo.protocol() };
 
-    std::cout << "Connecting..." << std::endl;
+    std::clog << "Connecting..." << std::endl;
     sock.connect(ainfo.address());
 
-    std::cout << "Sending request..." << std::endl;
+    std::clog << "Sending request..." << std::endl;
     sock.send(request);
-    std::cout << "Done.\n" << std::endl;
 
-    std::string buff(1024, '\0');
+    std::clog << "Receiving response..." << std::endl;
+    std::string buff(max_bytes, '\0');
     buff.resize(sock.recv(buff.data(), buff.size()));
+
+    std::clog << "Done.\n" << std::endl;
 
     std::cout << buff << std::endl;
 

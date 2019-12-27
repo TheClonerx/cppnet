@@ -13,7 +13,7 @@
 #include <sys/socket.h>
 #endif
 
-#include <net/address.hpp>
+#include <cppnet/address.hpp>
 
 namespace net {
 
@@ -103,15 +103,15 @@ It getaddrinfo(It it, const char* node, const char* service, int family, int typ
 #ifdef _WIN32
     if (r != 0) {
         e.assign(WSAGetLastError(), std::system_category());
-        return start;
+        return it;
     }
 #else
     if (r == EAI_SYSTEM) {
         e.assign(errno, std::system_category());
-        return start;
+        return it;
     } else if (r != 0) {
         e.assign(r, addrinfo_category());
-        return start;
+        return it;
     }
 #endif
     else

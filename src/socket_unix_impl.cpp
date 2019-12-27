@@ -1,4 +1,4 @@
-#include "net/socket.hpp"
+#include <cppnet/socket.hpp>
 
 #include <fcntl.h>
 #include <unistd.h>

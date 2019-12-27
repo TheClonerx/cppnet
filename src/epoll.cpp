@@ -1,5 +1,5 @@
 #ifdef __linux__
-#include "net/epoll.hpp"
+#include <cppnet/epoll.hpp>
 #include <unistd.h>
 
 net::epoll::epoll()

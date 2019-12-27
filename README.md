@@ -4,22 +4,23 @@
 This project aims to create an intuitive and easy to use wrappers around the linux system calls
 
 ## Building
-This will build the library and the examples.
+This will build just the library.
 ```bash
-git clone https://github.com/TheClonerx/cppnet.git
-cd cppnet
-mkdir build
-cmake -S ./ -B build/ -DCPPNET_BUILD_EXAMPLES=ON
-cmake --build build/ --parallel $(nproc)
+cmake -S ./ -B build/ # configure project
+cmake --build build/  # build project
 ```
+to build also the examples add `-DCPPNET_BUILD_EXAMPLES=ON` to the configuration arguments
 
 ## Running the examples
 ```bash
-./bin/examples/example_getaddrinfo google.net 80
+./build/examples/example_getaddrinfo google.net 80
 ```
 
 ## Installing
-`TODO:` Add install instructions to CMakeLists.txt
+```bash
+cmake -S ./ -B build/
+cmake --build build/ --target install
+```
 
 ## Example
 

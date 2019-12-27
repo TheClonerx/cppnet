@@ -1,4 +1,4 @@
-#include "net/poll.hpp"
+#include <cppnet/poll.hpp>
 #include <algorithm>
 
 bool net::poll::add(socket::native_handle_type fd, short eventmask)

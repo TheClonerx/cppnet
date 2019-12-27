@@ -10,7 +10,7 @@
 #include <sys/socket.h>
 #endif
 
-#include <net/address.hpp>
+#include <cppnet/address.hpp>
 
 namespace net {
 

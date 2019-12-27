@@ -2,11 +2,8 @@
 #include <vector>
 #include <string>
 
-#include <net/getaddrinfo.hpp>
-
-#ifndef _WIN32
-#include <arpa/inet.h> // inet_ntop
-#endif
+#include <cppnet/getaddrinfo.hpp>
+#include <arpa/inet.h>
 
 std::string addr_to_str(const sockaddr* addr); // browser friendly address
 

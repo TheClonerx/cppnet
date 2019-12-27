@@ -1,5 +1,5 @@
-#include <net/address.hpp>
-#include <net/getaddrinfo.hpp>
+#include <cppnet/address.hpp>
+#include <cppnet/getaddrinfo.hpp>
 
 
 net::address net::address::from_ipv4(std::string_view host, uint16_t port)

@@ -13,7 +13,7 @@
 #include <poll.h>
 #endif
 
-#include "net/socket.hpp"
+#include <cppnet/socket.hpp>
 
 namespace net {
 
