@@ -3,10 +3,11 @@
 
 #include <iostream>
 #include <string_view>
+#include <string>
 
 using namespace std::literals;
 
-constexpr auto request = 
+constexpr auto request =
     "GET / HTTP/1.1\r\n"
     "Host: example.com\r\n"
     "\r\n"sv;
