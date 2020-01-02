@@ -43,9 +43,9 @@ int main()
     sock.send("GET / HTTP/1.1\r\n\r\n");
     char buff[2048];
     // receive up to 2048 bytes
-    size_t recived = sock.recv(buff, sizeof(buff));
+    size_t received = sock.recv(buff, sizeof(buff));
     // print out the received bytes
-    std::cout << std::string_view{ buff, recived } << std::endl;
+    std::cout << std::string_view{ buff, received } << std::endl;
 }
 ```
 
