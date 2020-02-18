@@ -76,15 +76,6 @@ size_t net::socket::send(const void* buffer, size_t size, int flags)
     return sent;
 }
 
-size_t net::socket::send(std::string_view buffer, int flags, std::error_code& e) noexcept
-{
-    return send(buffer.data(), buffer.size(), flags, e);
-}
-
-size_t net::socket::send(std::string_view buffer, int flags)
-{
-    return send(buffer.data(), buffer.size(), flags);
-}
 
 size_t net::socket::sendto(const void* buffer, size_t size, int flags, const sockaddr* addr, size_t addrlen)
 {
@@ -142,11 +133,6 @@ void net::socket::setblocking(bool block)
     std::error_code e;
     setblocking(block, e);
     THROW_IF_ERROR(e);
-}
-
-net::socket::native_handle_type net::socket::native_handle() noexcept
-{
-    return m_Handle;
 }
 
 int net::socket::family() const

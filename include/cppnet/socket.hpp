@@ -39,7 +39,7 @@ public:
 
 private:
     static constexpr struct from_native_handle_t {
-    } from_native_handle{};
+    } from_native_handle {};
     socket(from_native_handle_t, native_handle_type);
 
 public:
@@ -68,8 +68,14 @@ public:
     size_t send(const void* buffer, size_t buffer_size, int flags = 0);
     size_t send(const void* buffer, size_t buffer_size, int flags, std::error_code&) noexcept;
 
-    size_t send(std::string_view buffer, int flags = 0);
-    size_t send(std::string_view buffer, int flags, std::error_code&) noexcept;
+    inline size_t send(std::string_view buffer, int flags = 0)
+    {
+        return send(buffer.data(), buffer.size(), flags);
+    }
+    inline size_t send(std::string_view buffer, int flags, std::error_code& e) noexcept
+    {
+        return send(buffer.data(), buffer.size(), flags, e);
+    }
 
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size);
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size, std::error_code&) noexcept;
@@ -187,7 +193,10 @@ public:
         setsockopt(level, optname, &optval, sizeof(T), e);
     }
 
-    native_handle_type native_handle() noexcept;
+    inline native_handle_type native_handle() const noexcept
+    {
+        return m_Handle;
+    }
 
     int family() const;
     int family(std::error_code&) const noexcept;
@@ -218,3 +227,15 @@ protected:
 };
 
 } // namespace net
+
+#define SOCKET_COMPARATION(comp) \
+    inline bool operator comp(net::socket const& lhs, net::socket const& rhs) noexcept { return lhs.native_handle() comp rhs.native_handle(); }
+
+SOCKET_COMPARATION(==)
+SOCKET_COMPARATION(!=)
+SOCKET_COMPARATION(<)
+SOCKET_COMPARATION(>)
+SOCKET_COMPARATION(<=)
+SOCKET_COMPARATION(>=)
+
+#undef SOCKET_COMPARATION
