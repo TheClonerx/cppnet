@@ -237,20 +237,20 @@ public:
         swap(lhs.m_Handle, rhs.m_Handle);
     }
 
+#define SOCKET_COMPARATION(op) constexpr bool operator op(socket const& rhs) const noexcept { return m_Handle op rhs.m_Handle; }
+    SOCKET_COMPARATION(==)
+    SOCKET_COMPARATION(!=)
+    SOCKET_COMPARATION(<)
+    SOCKET_COMPARATION(>)
+    SOCKET_COMPARATION(<=)
+    SOCKET_COMPARATION(>=)
+#undef SOCKET_COMPARATION
+
+    constexpr operator bool() const noexcept { return m_Handle != invalid_handle; }
+
 protected:
     native_handle_type m_Handle = invalid_handle;
 };
 
 } // namespace net
 
-#define SOCKET_COMPARATION(comp) \
-    inline bool operator comp(net::socket const& lhs, net::socket const& rhs) noexcept { return lhs.native_handle() comp rhs.native_handle(); }
-
-SOCKET_COMPARATION(==)
-SOCKET_COMPARATION(!=)
-SOCKET_COMPARATION(<)
-SOCKET_COMPARATION(>)
-SOCKET_COMPARATION(<=)
-SOCKET_COMPARATION(>=)
-
-#undef SOCKET_COMPARATION
