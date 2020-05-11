@@ -10,7 +10,7 @@ using namespace std::literals;
 int main()
 {
     net::poll poll;
-    poll.add(0, POLLIN);
+    poll.add(0, net::poll::events::read);
     std::cout << "Now polling stdin...\n";
     size_t polled = poll.execute(5s);
     if (!polled)

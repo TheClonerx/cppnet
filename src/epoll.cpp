@@ -3,53 +3,52 @@
 #include <unistd.h>
 
 net::epoll::epoll()
-    : epoll(0)
+    : epoll(0) // can throw
 {
-    if (fd < 0)
-        throw std::system_error(errno, std::system_category());
 }
 
 net::epoll::epoll(int flags)
-    : fd(epoll_create1(flags))
+    : m_handle(epoll_create1(flags))
 {
-    if (fd < 0)
+    if (m_handle < 0)
         throw std::system_error(errno, std::system_category());
 }
 
 net::epoll::epoll(int flags, std::error_code& e) noexcept
-    : fd(epoll_create1(flags))
+    : m_handle(epoll_create1(flags))
 {
-    if (fd < 0)
+    if (m_handle < 0)
         e.assign(errno, std::system_category());
     else
         e.assign(0, std::system_category());
 }
 
 net::epoll::epoll(net::epoll&& rhs) noexcept
-    : fd(rhs.fd)
+    : m_handle(rhs.m_handle)
 {
-    rhs.fd = -1;
+    rhs.m_handle = -1;
 }
 
 net::epoll::~epoll() noexcept
 {
-    ::close(fd);
+    if (m_handle != -1)
+        ::close(m_handle);
+    m_handle = -1;
 }
 
 net::epoll& net::epoll::operator=(net::epoll&& rhs) noexcept
 {
-    fd = rhs.fd;
-    rhs.fd = -1;
+    m_handle = std::exchange(rhs.m_handle, -1);
     return *this;
 }
 
-bool net::epoll::add(int fd, int events) noexcept
+bool net::epoll::add(socket::native_handle_type fd, int events) noexcept
 {
-    epoll_event event;
+    epoll_event event{};
     event.events = events;
     event.data.fd = fd;
 
-    int ret = epoll_ctl(this->fd, EPOLL_CTL_ADD, fd, &event);
+    int ret = epoll_ctl(m_handle, EPOLL_CTL_ADD, fd, &event);
     if (ret < 0)
         return false;
     else {
@@ -58,13 +57,13 @@ bool net::epoll::add(int fd, int events) noexcept
     }
 }
 
-bool net::epoll::add(int fd, int events, std::error_code& e) noexcept
+bool net::epoll::add(socket::native_handle_type fd, int events, std::error_code& e) noexcept
 {
     epoll_event event;
     event.events = events;
     event.data.fd = fd;
 
-    int ret = epoll_ctl(this->fd, EPOLL_CTL_ADD, fd, &event);
+    int ret = epoll_ctl(m_handle, EPOLL_CTL_ADD, fd, &event);
 
     if (ret < 0) {
         e.assign(errno, std::system_category());
@@ -76,22 +75,22 @@ bool net::epoll::add(int fd, int events, std::error_code& e) noexcept
     }
 }
 
-bool net::epoll::modify(int fd, int events) noexcept
+bool net::epoll::modify(socket::native_handle_type fd, int events) noexcept
 {
     epoll_event event;
     event.events = events;
     event.data.fd = fd;
 
-    return !epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &event);
+    return !epoll_ctl(m_handle, EPOLL_CTL_MOD, fd, &event);
 }
 
-bool net::epoll::modify(int fd, int events, std::error_code& e) noexcept
+bool net::epoll::modify(socket::native_handle_type fd, int events, std::error_code& e) noexcept
 {
     epoll_event event;
     event.events = events;
     event.data.fd = fd;
 
-    int ret = epoll_ctl(this->fd, EPOLL_CTL_MOD, fd, &event);
+    int ret = epoll_ctl(m_handle, EPOLL_CTL_MOD, fd, &event);
 
     if (ret < 0) {
         e.assign(errno, std::system_category());
@@ -102,9 +101,9 @@ bool net::epoll::modify(int fd, int events, std::error_code& e) noexcept
     }
 }
 
-bool net::epoll::remove(int fd) noexcept
+bool net::epoll::remove(socket::native_handle_type fd) noexcept
 {
-    int ret = epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, nullptr);
+    int ret = epoll_ctl(m_handle, EPOLL_CTL_DEL, fd, nullptr);
     if (ret < 0)
         return false;
     else {
@@ -113,9 +112,9 @@ bool net::epoll::remove(int fd) noexcept
     }
 }
 
-bool net::epoll::remove(int fd, std::error_code& e) noexcept
+bool net::epoll::remove(socket::native_handle_type fd, std::error_code& e) noexcept
 {
-    int ret = epoll_ctl(this->fd, EPOLL_CTL_DEL, fd, nullptr);
+    int ret = epoll_ctl(m_handle, EPOLL_CTL_DEL, fd, nullptr);
 
     if (ret < 0) {
         e.assign(errno, std::system_category());
@@ -129,19 +128,17 @@ bool net::epoll::remove(int fd, std::error_code& e) noexcept
 
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout)
 {
-    data.clear();
-    data.insert(data.begin(), size, epoll_event {});
-    int ret = epoll_wait(fd, data.data(), size, timeout ? timeout->count() : -1);
-    if (ret < 0)
-        throw std::system_error(errno, std::system_category());
-    return ret;
+    std::error_code e;
+    auto result = execute(timeout, e);
+    if (e) throw std::system_error(e);
+    return result;
 }
 
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, std::error_code& e)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event {}); // this may throw sadly
-    int ret = epoll_wait(fd, data.data(), size, timeout ? timeout->count() : -1);
+    data.resize(size);
+    int ret = epoll_wait(m_handle, data.data(), size, timeout ? timeout->count() : -1);
     if (ret < 0) {
         e.assign(errno, std::system_category());
         return 0;
@@ -153,19 +150,17 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, std
 
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, const sigset_t& sigmask)
 {
-    data.clear();
-    data.insert(data.begin(), size, epoll_event {});
-    int ret = epoll_pwait(fd, data.data(), size, timeout ? timeout->count() : -1, &sigmask);
-    if (ret < 0)
-        throw std::system_error(errno, std::system_category());
-    return ret;
+    std::error_code e;
+    auto result = execute(timeout, sigmask, e);
+    if (e) throw std::system_error(e);
+    return result;
 }
 
 size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, const sigset_t& sigmask, std::error_code& e)
 {
     data.clear();
-    data.insert(data.begin(), size, epoll_event {}); // this may throw sadly
-    int ret = epoll_pwait(fd, data.data(), size, timeout ? timeout->count() : -1, &sigmask);
+    data.resize(size);
+    int ret = epoll_pwait(m_handle, data.data(), size, timeout ? timeout->count() : -1, &sigmask);
     if (ret < 0) {
         e.assign(errno, std::system_category());
         return 0;
@@ -177,18 +172,20 @@ size_t net::epoll::execute(std::optional<std::chrono::milliseconds> timeout, con
 
 void net::epoll::close()
 {
-    if (::close(fd) < 0)
+    if (::close(m_handle) < 0) {
         throw std::system_error(errno, std::system_category());
-    fd = -1;
+    } else {
+        m_handle = -1;
+    }
 }
 
 void net::epoll::close(std::error_code& e) noexcept
 {
-    if (::close(fd) < 0)
+    if (::close(m_handle) < 0)
         e.assign(errno, std::system_category());
     else {
         e.assign(0, std::system_category());
-        fd = -1;
+        m_handle = -1;
     }
 }
 

@@ -9,15 +9,18 @@
 namespace net {
 
 struct select_return_t {
-    size_t reads, writes, exceptions;
+    std::size_t reads, writes, exceptions;
+    constexpr operator std::size_t() const noexcept {
+        return reads + writes + exceptions;
+    }
 };
 
 class select {
 public:
-    enum {
-        READ = 1 << 0,
-        WRITE = 1 << 1,
-        EXCEPT = 1 << 2,
+    enum events {
+        read = 1 << 0, // Data may be read without blocking
+        write = 1 << 1, // Data may be written without blocking
+        exception = 1 << 2, // An error occurred, see socket.error()
     };
 
     bool add(socket::native_handle_type fd, int events);

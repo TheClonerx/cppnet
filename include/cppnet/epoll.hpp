@@ -9,12 +9,20 @@
 #include <system_error>
 #include <vector>
 
+#include <cppnet/socket.hpp>
+
 namespace net {
 class epoll {
 public:
+    // pollers must have a valid state when default constructed,
+    // meaning, they should be able call execute in this state
+    // so, the default constructor of epoll will create a valid poller using epoll_create(2)
+
     epoll();
     explicit epoll(int flags);
     epoll(int flags, std::error_code&) noexcept;
+
+    using native_handle_type = int;
 
     epoll(const epoll&) = delete;
     epoll& operator=(const epoll&) = delete;
@@ -24,22 +32,38 @@ public:
 
     ~epoll() noexcept;
 
-    bool add(int fd, int events) noexcept;
-    bool add(int fd, int events, std::error_code&) noexcept;
+    enum events {
+        // basic ones
 
-    bool modify(int fd, int events) noexcept;
-    bool modify(int fd, int events, std::error_code&) noexcept;
+        read = EPOLLIN, // Data may be read without blocking
+        write = EPOLLOUT, // Data may be written without blocking
+        exception = EPOLLERR, // An error ocurred, see socket.error()
 
-    bool remove(int fd) noexcept;
-    bool remove(int fd, std::error_code&) noexcept;
+        // provided by epoll
 
-    size_t execute(std::optional<std::chrono::milliseconds> milliseconds);
-    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, std::error_code&);
+        hang_up = EPOLLHUP,
+        edge_triggered = EPOLLET, // Request for the events to be edge triggered, if not provided, epoll behaves similarly to poll, but faster
 
-    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask);
-    size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask, std::error_code&);
+        // and more others that may be rarely used
+        // TODO: Add the remaining flags
+    };
 
-    int fileno() const noexcept;
+    bool add(socket::native_handle_type fd, int events) noexcept;
+    bool add(socket::native_handle_type fd, int events, std::error_code&) noexcept;
+
+    bool modify(socket::native_handle_type fd, int events) noexcept;
+    bool modify(socket::native_handle_type fd, int events, std::error_code&) noexcept;
+
+    bool remove(socket::native_handle_type fd) noexcept;
+    bool remove(socket::native_handle_type fd, std::error_code&) noexcept;
+
+    std::size_t execute(std::optional<std::chrono::milliseconds> milliseconds);
+    std::size_t execute(std::optional<std::chrono::milliseconds> milliseconds, std::error_code&);
+
+    std::size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask);
+    std::size_t execute(std::optional<std::chrono::milliseconds> milliseconds, const sigset_t& sigmask, std::error_code&);
+
+    native_handle_type native_handle() const noexcept;
 
     // ranges
     template <typename OIt>
@@ -68,8 +92,9 @@ public:
     void close();
     void close(std::error_code&) noexcept;
 
+protected:
+    native_handle_type m_handle;
 private:
-    int fd;
     std::vector<epoll_event> data;
     size_t size;
 };

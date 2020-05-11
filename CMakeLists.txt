@@ -4,8 +4,6 @@ project(cppnet VERSION 1.0.1 LANGUAGES CXX)
 
 option(CPPNET_BUILD_EXAMPLES "Build the cppnet examples" OFF)
 
-# include_directories(include)
-
 add_library(cppnet)
 target_compile_features(cppnet PUBLIC cxx_std_17)
 target_sources(cppnet PRIVATE

@@ -31,8 +31,16 @@ bool net::select::remove(socket::native_handle_type fd)
 
 net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout)
 {
-	using namespace std::chrono;
-	using namespace std::literals;
+    std::error_code e;
+    auto result = execute(timeout, e);
+    if (e) throw std::system_error(e);
+    return result;
+}
+
+net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout, std::error_code& e) noexcept
+{
+    using namespace std::chrono;
+    using namespace std::literals;
     if (fdlist.empty())
         return { 0, 0, 0 };
 
@@ -52,11 +60,11 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
         if (maxfd < item.fd)
             maxfd = item.fd;
 #endif
-        if (item.events & READ)
+        if (item.events & events::read)
             FD_SET(item.fd, &rlist);
-        if (item.events & WRITE)
+        if (item.events & events::write)
             FD_SET(item.fd, &wlist);
-        if (item.events & EXCEPT)
+        if (item.events & events::exception)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
@@ -64,70 +72,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-            tm.tv_sec = static_cast<decltype(tm.tv_sec)>(duration_cast<seconds>(*timeout).count());
-            tm.tv_usec = static_cast<decltype(tm.tv_usec)>((*timeout % 1s).count());
-        }
-        int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
-        if (ret < 0)
-            throw std::system_error(errno, std::system_category());
-    }
-
-    net::select_return_t ret { 0, 0, 0 };
-
-    for (auto& item : fdlist) {
-        if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | READ;
-            ret.reads++;
-        } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | WRITE;
-            ret.writes++;
-        } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | EXCEPT;
-            ret.exceptions++;
-        }
-    }
-
-    return ret;
-}
-
-net::select_return_t net::select::execute(std::optional<std::chrono::microseconds> timeout, std::error_code& e) noexcept
-{
-	using namespace std::chrono;
-	using namespace std::literals;
-    if (fdlist.empty())
-        return { 0, 0, 0 };
-
-    fd_set rlist;
-    fd_set wlist;
-    fd_set xlist;
-
-    FD_ZERO(&rlist);
-    FD_ZERO(&wlist);
-    FD_ZERO(&xlist);
-
-    int maxfd = 0;
-
-    for (auto& item : fdlist) {
-        item.sevents = 0;
-#ifndef _WIN32
-		if (maxfd < item.fd)
-			maxfd = item.fd;
-#endif
-
-        if (item.events & READ)
-            FD_SET(item.fd, &rlist);
-        if (item.events & WRITE)
-            FD_SET(item.fd, &wlist);
-        if (item.events & EXCEPT)
-            FD_SET(item.fd, &xlist);
-    }
-    maxfd++;
-
-    {
-        timeval tm;
-        if (timeout) {
-            tm.tv_sec = static_cast<decltype(tm.tv_sec)>(duration_cast<seconds>(*timeout).count());
-            tm.tv_usec = static_cast<decltype(tm.tv_usec)>((*timeout % 1s).count());
+            tm.tv_sec = duration_cast<seconds>(*timeout).count();
+            tm.tv_usec = (*timeout % 1s).count();
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0) {
@@ -140,13 +86,13 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
     for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | READ;
+            item.sevents = item.sevents | events::read;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | WRITE;
+            item.sevents = item.sevents | events::write;
             ret.writes++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | EXCEPT;
+            item.sevents = item.sevents | events::exception;
             ret.exceptions++;
         }
     }
@@ -158,59 +104,10 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 
 net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask)
 {
-    if (fdlist.empty())
-        return { 0, 0, 0 };
-
-    fd_set rlist;
-    fd_set wlist;
-    fd_set xlist;
-
-    FD_ZERO(&rlist);
-    FD_ZERO(&wlist);
-    FD_ZERO(&xlist);
-
-    int maxfd = 0;
-    for (auto& item : fdlist) {
-        item.sevents = 0;
-        if (maxfd < item.fd)
-            maxfd = item.fd;
-
-        if (item.events & READ)
-            FD_SET(item.fd, &rlist);
-        if (item.events & WRITE)
-            FD_SET(item.fd, &wlist);
-        if (item.events & EXCEPT)
-            FD_SET(item.fd, &xlist);
-    }
-    maxfd++;
-
-    {
-        timespec tm;
-        if (timeout) {
-            tm.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(*timeout).count();
-            tm.tv_nsec = timeout->count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
-        }
-        int ret = ::pselect(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr, &sigmask);
-        if (ret < 0)
-            throw std::system_error(errno, std::system_category());
-    }
-
-    net::select_return_t ret { 0, 0, 0 };
-
-    for (auto& item : fdlist) {
-        if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | READ;
-            ret.reads++;
-        } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | WRITE;
-            ret.reads++;
-        } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | EXCEPT;
-            ret.exceptions++;
-        }
-    }
-
-    return ret;
+    std::error_code e;
+    auto result = execute(timeout, sigmask, e);
+    if (e) throw std::system_error(e);
+    return result;
 }
 
 net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds> timeout, const sigset_t& sigmask, std::error_code& e) noexcept
@@ -232,20 +129,23 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
         if (maxfd < item.fd)
             maxfd = item.fd;
 
-        if (item.events & READ)
+        if (item.events & events::read)
             FD_SET(item.fd, &rlist);
-        if (item.events & WRITE)
+        if (item.events & events::write)
             FD_SET(item.fd, &wlist);
-        if (item.events & EXCEPT)
+        if (item.events & events::exception)
             FD_SET(item.fd, &xlist);
     }
     maxfd++;
 
     {
+        using namespace std::chrono;
+        using namespace std::literals;
+
         timespec tm;
         if (timeout) {
-            tm.tv_sec = std::chrono::duration_cast<std::chrono::seconds>(*timeout).count();
-            tm.tv_nsec = timeout->count() % std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(1)).count();
+            tm.tv_sec = duration_cast<seconds>(*timeout).count();
+            tm.tv_nsec = (*timeout % 1s).count();
         }
         int ret = ::pselect(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr, &sigmask);
         if (ret < 0) {
@@ -258,13 +158,13 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 
     for (auto& item : fdlist) {
         if (FD_ISSET(item.fd, &rlist)) {
-            item.sevents = item.sevents | READ;
+            item.sevents = item.sevents | events::read;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &wlist)) {
-            item.sevents = item.sevents | WRITE;
+            item.sevents = item.sevents | events::write;
             ret.reads++;
         } else if (FD_ISSET(item.fd, &xlist)) {
-            item.sevents = item.sevents | EXCEPT;
+            item.sevents = item.sevents | events::exception;
             ret.exceptions++;
         }
     }

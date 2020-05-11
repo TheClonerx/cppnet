@@ -1,7 +1,7 @@
 #include <cppnet/poll.hpp>
 #include <algorithm>
 
-bool net::poll::add(socket::native_handle_type fd, short eventmask)
+bool net::poll::add(socket::native_handle_type fd, int eventmask)
 {
     if (fd < 0)
         return false;
@@ -11,12 +11,12 @@ bool net::poll::add(socket::native_handle_type fd, short eventmask)
 
     if (it != fds.end())
         return false;
-    fds.push_back(pollfd { fd, eventmask, 0 });
+    fds.push_back(pollfd { fd, static_cast<short>(eventmask), 0 });
 
     return true;
 }
 
-bool net::poll::modify(socket::native_handle_type fd, short eventmask)
+bool net::poll::modify(socket::native_handle_type fd, int eventmask)
 {
     if (fd < 0)
         return false;
@@ -52,11 +52,13 @@ size_t net::poll::execute(std::optional<std::chrono::milliseconds> timeout)
         fd.revents = 0;
 #ifdef _WIN32
     int ret = ::WSAPoll(fds.data(), static_cast<ULONG>(fds.size()), static_cast<INT>(timeout ? timeout->count() : -1));
+    if (ret < 0)
+        throw std::system_error(WSAGetLastError(), std::system_category());
 #else
     int ret = ::poll(fds.data(), fds.size(), timeout ? timeout->count() : -1);
-#endif
     if (ret < 0)
         throw std::system_error(errno, std::system_category());
+#endif
     return ret;
 }
 
@@ -66,11 +68,13 @@ size_t net::poll::execute(std::optional<std::chrono::milliseconds> timeout, std:
         fd.revents = 0;
 #ifdef _WIN32
     int ret = ::WSAPoll(fds.data(), static_cast<ULONG>(fds.size()), static_cast<INT>(timeout ? timeout->count() : -1));
+    if (ret < 0)
+        e.assign(WSAGetLastError(), std::system_category());
 #else
     int ret = ::poll(fds.data(), fds.size(), timeout ? timeout->count() : -1);
-#endif
     if (ret < 0)
         e.assign(errno, std::system_category());
+#endif
     return ret;
 }
 
