@@ -55,7 +55,7 @@ It getaddrinfo(It start, It stop, const char* node, const char* service, int fam
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    ::addrinfo* addrlist{};
+    ::addrinfo* addrlist = nullptr;
     int r = ::getaddrinfo(node, service, &hints, &addrlist);
 #ifdef _WIN32
     if (r != 0) {
@@ -150,27 +150,17 @@ It getaddrinfo(It it, const char* host, const char* service, int family = 0, int
     return ret;
 }
 
-inline address_info& getaddrinfo(address_info& ainfo, const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
-{
-    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
-    return ainfo;
-}
-
-inline address_info& getaddrinfo(address_info& ainfo, const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
-{
-    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
-    return ainfo;
-}
-
 inline address_info getaddrinfo(const char* host, const char* service, int family = 0, int type = 0, int protocol = 0, int flags = 0)
 {
     address_info ainfo;
-    return getaddrinfo(ainfo, host, service, family, type, protocol, flags);
+    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags);
+    return ainfo;
 }
 
 inline address_info getaddrinfo(const char* host, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     address_info ainfo;
-    return getaddrinfo(ainfo, host, service, family, type, protocol, flags, e);
+    getaddrinfo(&ainfo, &ainfo + 1, host, service, family, type, protocol, flags, e);
+    return ainfo;
 }
 }
