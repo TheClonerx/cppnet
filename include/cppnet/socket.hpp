@@ -166,37 +166,43 @@ public:
     void setblocking(bool);
     void setblocking(bool, std::error_code&) noexcept;
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_trivially_copyable_v<T>, std::nullptr_t> = nullptr>
     T getsockopt(int level, int optname) const
     {
         size_t optlen = sizeof(T);
-        // we don't want to default-initialize T
-        // (T optval; getsockopt(level, optname, &optval, &optlen);)
-        // so we just create a stack buffer
-        char optval[sizeof(T)];
-        getsockopt(level, optname, optval, &optlen);
-        return *((T*)optval);
+        if constexpr (std::is_trivially_default_constructible_v<T>) { // it may be easier to the compiler to optimize this
+            std::remove_cv_t<T> optval;
+            getsockopt(level, optname, &optval, &optlen);
+            return optval;
+        } else {
+            std::remove_cv_t<T> optval[1];
+            getsockopt(level, optname, optval, &optlen);
+            return optval[0];
+        }
     }
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_trivially_copyable_v<T>, std::nullptr_t> = nullptr>
     T getsockopt(int level, int optname, std::error_code& e) const noexcept
     {
         size_t optlen = sizeof(T);
-        // we don't want to default-initialize T
-        // (T optval; getsockopt(level, optname, &optval, &optlen);)
-        // so we just create a stack buffer and move it later
-        char optval[sizeof(T)];
-        getsockopt(level, optname, optval, &optlen, e);
-        return *((T*)optval);
+        if constexpr (std::is_trivially_default_constructible_v<T>) { // it may be easier to the compiler to optimize this
+            std::remove_cv_t<T> optval;
+            getsockopt(level, optname, &optval, &optlen, e);
+            return optval;
+        } else {
+            std::remove_cv_t<T> optval[1];
+            getsockopt(level, optname, optval, &optlen, e);
+            return optval[0];
+        }
     }
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_trivially_copyable_v<T>, std::nullptr_t> = nullptr>
     void setsockopt(int level, int optname, T&& optval)
     {
         setsockopt(level, optname, &optval, sizeof(T));
     }
 
-    template <typename T>
+    template <typename T, std::enable_if_t<std::is_trivially_copyable_v<T>, std::nullptr_t> = nullptr>
     void setsockopt(int level, int optname, T&& optval, std::error_category& e) noexcept
     {
         setsockopt(level, optname, &optval, sizeof(T), e);
