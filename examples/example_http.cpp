@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string_view>
 #include <string>
+#include <charconv>
 
 using namespace std::literals;
 
@@ -18,13 +19,12 @@ int main(int argc, const char** argv) try {
 
     if (argc == 2) {
         if (argv[1] == "-h"sv || argv[1] == "--help"sv) {
-            std::cout << "Usage: " << argv[0] << " [max bytes]\n\n";
+            std::cout << "Usage:\n\t" << argv[0] << " [max bytes]\n\n";
             return EXIT_SUCCESS;
         }
-        try {
-            max_bytes = std::stoul(argv[1]);
-        } catch (...) {
-            std::cout << "Usage: " << argv[0] << " [max bytes]\n\n";
+        auto [ptr, ec] = std::from_chars(argv[1], argv[1] + std::strlen(argv[1]), max_bytes);
+        if (ec != std::errc{}) {
+            std::cout << "Usage:\n\t" << argv[0] << " [max bytes]\n\n";
             return EXIT_FAILURE;
         }
     }
