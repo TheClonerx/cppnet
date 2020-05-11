@@ -231,6 +231,11 @@ public:
     void close();
     void close(std::error_code&) noexcept;
 
+    inline std::error_code error() const noexcept {
+        auto error_number = getsockopt<int>(SOL_SOCKET, SO_ERROR);
+        return std::error_code{ error_number, std::system_category() };
+    }
+
     inline friend void swap(socket& lhs, socket& rhs) noexcept
     {
         using std::swap;
