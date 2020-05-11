@@ -14,22 +14,6 @@
  * Use errno in socket_unix_impl.cpp and WSAGetLastError() in socket_win32_impl.cpp
  */
 
-net::socket::socket(net::socket::from_native_handle_t, net::socket::native_handle_type handle)
-    : m_Handle(handle)
-{
-}
-
-net::socket::socket(net::socket&& rhs) noexcept
-    : m_Handle(std::exchange(rhs.m_Handle, invalid_handle))
-{
-}
-
-net::socket& net::socket::operator=(net::socket&& rhs) noexcept
-{
-    m_Handle = std::exchange(rhs.m_Handle, invalid_handle);
-    return *this;
-}
-
 net::socket::~socket() noexcept
 {
     if (m_Handle != invalid_handle)

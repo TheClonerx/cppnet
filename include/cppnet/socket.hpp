@@ -24,13 +24,20 @@ public:
     static constexpr native_handle_type invalid_handle = -1;
 #endif
 
-    socket() noexcept = default;
+    constexpr socket() noexcept = default;
 
-    socket(socket&&) noexcept;
-    socket& operator=(socket&&) noexcept;
+    constexpr socket(socket&& rhs) noexcept
+        : m_Handle{ rhs.m_Handle }
+    {
+        rhs.m_Handle = invalid_handle;
+    }
 
-    socket(const socket&) = delete;
-    socket& operator=(const socket&) = delete;
+    constexpr socket& operator=(socket&& rhs) noexcept
+    {
+        m_Handle = rhs.m_Handle;
+        rhs.m_Handle = invalid_handle;
+        return *this;
+    }
 
     ~socket() noexcept;
 
@@ -40,7 +47,9 @@ public:
 private:
     static constexpr struct from_native_handle_t {
     } from_native_handle {};
-    socket(from_native_handle_t, native_handle_type);
+    constexpr socket(from_native_handle_t, native_handle_type handle) noexcept
+        : m_Handle { handle }
+    {}
 
 public:
     static std::pair<socket, socket> pair(int family = AF_UNIX, int type = SOCK_STREAM, int protocol = 0);
@@ -80,14 +89,14 @@ public:
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size);
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address& addr)
+    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr)
     {
-        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
+        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr const*>(&addr.m_socket_address), addr.m_socket_address_size);
     }
 
-    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address& addr, std::error_code& e) noexcept
+    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr, std::error_code& e) noexcept
     {
-        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
+        return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr const*>(&addr.m_socket_address), addr.m_socket_address_size, e);
     }
 
     void connect(const sockaddr* address, size_t address_size);
@@ -193,7 +202,7 @@ public:
         setsockopt(level, optname, &optval, sizeof(T), e);
     }
 
-    inline native_handle_type native_handle() const noexcept
+    constexpr native_handle_type native_handle() const noexcept
     {
         return m_Handle;
     }
@@ -216,7 +225,7 @@ public:
     void close();
     void close(std::error_code&) noexcept;
 
-    friend void swap(socket& lhs, socket& rhs) noexcept
+    inline friend void swap(socket& lhs, socket& rhs) noexcept
     {
         using std::swap;
         swap(lhs.m_Handle, rhs.m_Handle);
