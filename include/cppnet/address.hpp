@@ -26,7 +26,7 @@ constexpr struct localhost_t {
 class address {
 
 public:
-    constexpr static uint16_t invalid_family = -1;
+    constexpr static std::uint16_t invalid_family = ~static_cast<std::uint16_t>(0);
     friend class socket;
 
     constexpr address() noexcept
@@ -35,20 +35,22 @@ public:
     {
     }
 
-    constexpr address(const address&) noexcept = default;
+    constexpr address(address const&) noexcept = default;
     constexpr address(address&&) noexcept = default;
 
-    constexpr address& operator=(const address&) noexcept = default;
+    constexpr address& operator=(address const&) noexcept = default;
     constexpr address& operator=(address&&) noexcept = default;
 
-    address(sockaddr_storage addr, size_t len)
+   ~address() noexcept = default;
+
+    constexpr address(sockaddr_storage addr, std::size_t len) noexcept
         : m_socket_address { addr }
         , m_socket_address_size { len }
     {
     }
 
 private:
-    inline static sockaddr_storage sockaddr_storage_from_sockaddr_and_size(const sockaddr* addr, size_t size)
+    inline static sockaddr_storage sockaddr_storage_from_sockaddr_and_size(const sockaddr* addr, size_t size) noexcept
     {
         sockaddr_storage ret {};
         std::memcpy(&ret, addr, size);
@@ -56,32 +58,32 @@ private:
     }
 
 public:
-    inline address(const sockaddr* addr, size_t len)
+    inline address(sockaddr const* addr, std::size_t len) noexcept
         : m_socket_address { sockaddr_storage_from_sockaddr_and_size(addr, len) }
         , m_socket_address_size { len }
     {
     }
 
-    static address from_ipv4(std::string_view host, uint16_t port);
-    static address from_ipv4(any_addr_t, uint16_t port) noexcept;
-    static address from_ipv4(localhost_t, uint16_t port) noexcept;
+    static address from_ipv4(std::string_view host, std::uint16_t port);
+    static address from_ipv4(any_addr_t, std::uint16_t port) noexcept;
+    static address from_ipv4(localhost_t, std::uint16_t port) noexcept;
 
-    static address from_ipv6(std::string_view host, uint16_t port, uint32_t flowinfo, uint32_t scopeid);
-    static address from_ipv6(any_addr_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept;
-    static address from_ipv6(localhost_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept;
+    static address from_ipv6(std::string_view host, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid);
+    static address from_ipv6(any_addr_t, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid) noexcept;
+    static address from_ipv6(localhost_t, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid) noexcept;
 
 #ifndef _WIN32
     static address from_unix(std::string_view path);
 #endif
 
-    constexpr uint16_t family() const noexcept
+    constexpr std::uint16_t family() const noexcept
     {
         return m_socket_address.ss_family;
     }
 
-    inline const sockaddr* address_pointer() const noexcept
+    constexpr sockaddr_storage const* address_pointer() const noexcept
     {
-        return reinterpret_cast<const sockaddr*>(&m_socket_address);
+        return &m_socket_address;
     }
 
     constexpr std::size_t address_size() const noexcept

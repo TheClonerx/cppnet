@@ -2,7 +2,7 @@
 #include <cppnet/getaddrinfo.hpp>
 
 
-net::address net::address::from_ipv4(std::string_view host, uint16_t port)
+net::address net::address::from_ipv4(std::string_view host, std::uint16_t port)
 {
     sockaddr_in addr {};
     constexpr size_t len = sizeof(addr);
@@ -19,7 +19,7 @@ net::address net::address::from_ipv4(std::string_view host, uint16_t port)
     return ret;
 }
 
-net::address net::address::from_ipv4(net::any_addr_t, uint16_t port) noexcept
+net::address net::address::from_ipv4(net::any_addr_t, std::uint16_t port) noexcept
 {
     sockaddr_in addr {};
     constexpr size_t len = sizeof(addr);
@@ -34,7 +34,7 @@ net::address net::address::from_ipv4(net::any_addr_t, uint16_t port) noexcept
     return ret;
 }
 
-net::address net::address::from_ipv4(net::localhost_t, uint16_t port) noexcept
+net::address net::address::from_ipv4(net::localhost_t, std::uint16_t port) noexcept
 {
     sockaddr_in addr {};
     constexpr size_t len = sizeof(addr);
@@ -49,7 +49,7 @@ net::address net::address::from_ipv4(net::localhost_t, uint16_t port) noexcept
     return ret;
 }
 
-net::address net::address::from_ipv6(std::string_view host, uint16_t port, uint32_t flowinfo, uint32_t scopeid)
+net::address net::address::from_ipv6(std::string_view host, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid)
 {
     sockaddr_in6 addr {};
     constexpr size_t len = sizeof(addr);
@@ -68,7 +68,7 @@ net::address net::address::from_ipv6(std::string_view host, uint16_t port, uint3
     return ret;
 }
 
-net::address net::address::from_ipv6(net::any_addr_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept
+net::address net::address::from_ipv6(net::any_addr_t, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid) noexcept
 {
     sockaddr_in6 addr {};
     constexpr size_t len = sizeof(addr);
@@ -85,7 +85,7 @@ net::address net::address::from_ipv6(net::any_addr_t, uint16_t port, uint32_t fl
     return ret;
 }
 
-net::address net::address::from_ipv6(net::localhost_t, uint16_t port, uint32_t flowinfo, uint32_t scopeid) noexcept
+net::address net::address::from_ipv6(net::localhost_t, std::uint16_t port, std::uint32_t flowinfo, std::uint32_t scopeid) noexcept
 {
     sockaddr_in6 addr {};
     constexpr size_t len = sizeof(addr);
@@ -109,12 +109,11 @@ net::address net::address::from_unix(std::string_view path)
     constexpr size_t len = sizeof(addr);
 
     addr.sun_family = AF_UNIX;
-    if (path.size() > sizeof(addr.sun_path))
+    if (path.size() > sizeof(addr.sun_path) - 1) {
         throw std::length_error("Path is too long");
-    else if (path.size() && path.back() != '\0') // std::string_view doesn't need to be nul terminated
-        throw std::runtime_error("Path must be null terminated");
-    else // zero size paths are unnamed, std::memcpy will do nothing in this case
+    }  else { // zero size paths are unnamed, std::memcpy will do nothing in this case
         std::memcpy(addr.sun_path, path.data(), path.size());
+    }
 
     address ret;
     std::memcpy(&ret.m_socket_address, &addr, len);
