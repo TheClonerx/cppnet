@@ -15,6 +15,10 @@
 
 #include <cppnet/address.hpp>
 
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
+
 namespace net {
 
 const std::error_category& addrinfo_category() noexcept;

@@ -6,11 +6,16 @@
 
 #include <cppnet/socket.hpp>
 
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
+
 namespace net {
 
 struct select_return_t {
     std::size_t reads, writes, exceptions;
-    constexpr operator std::size_t() const noexcept {
+    constexpr operator std::size_t() const noexcept
+    {
         return reads + writes + exceptions;
     }
 };

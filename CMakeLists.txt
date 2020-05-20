@@ -27,6 +27,8 @@ if(UNIX) # Unix specific
     target_sources(cppnet PRIVATE src/socket_unix_impl.cpp)
 endif()
 
+target_compile_definitions(cppnet PRIVATE CPPNET_IMPL)
+
 if (CPPNET_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()

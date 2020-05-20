@@ -13,6 +13,10 @@
 #include <sys/un.h> // struct sockaddr_un
 #endif
 
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
+
 namespace net {
 
 class addrinfo;
@@ -41,7 +45,7 @@ public:
     constexpr address& operator=(address const&) noexcept = default;
     constexpr address& operator=(address&&) noexcept = default;
 
-   ~address() noexcept = default;
+    ~address() noexcept = default;
 
     constexpr address(sockaddr_storage addr, std::size_t len) noexcept
         : m_socket_address { addr }

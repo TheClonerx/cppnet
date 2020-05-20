@@ -1,5 +1,6 @@
 {
     "cmake.configureArgs": [
         "-DCPPNET_BUILD_EXAMPLES=ON"
-    ]
+    ],
+    "C_Cpp.default.configurationProvider": "vector-of-bool.cmake-tools",
 }

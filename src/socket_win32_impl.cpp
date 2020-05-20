@@ -109,7 +109,7 @@ net::address net::socket::getpeername(std::error_code& e) noexcept
 
 size_t net::socket::recv(void* buf, size_t len, int flags_, std::error_code& e) noexcept
 {
-    WSABUF buffer{ static_cast<ULONG>(len), static_cast<CHAR*>(buf) };
+    WSABUF buffer { static_cast<ULONG>(len), static_cast<CHAR*>(buf) };
     DWORD numberOfBytesRecvd = 0;
     DWORD flags = flags_;
 
@@ -124,7 +124,7 @@ size_t net::socket::recv(void* buf, size_t len, int flags_, std::error_code& e) 
 
 size_t net::socket::recvfrom(void* buf, size_t len, int flags_, sockaddr* from, size_t* addr_len, std::error_code& e) noexcept
 {
-    WSABUF buffer{ static_cast<ULONG>(len), static_cast<CHAR*>(buf) };
+    WSABUF buffer { static_cast<ULONG>(len), static_cast<CHAR*>(buf) };
     DWORD numberOfBytesRecvd = 0;
     DWORD flags = flags_;
     INT fromLen;
@@ -141,7 +141,7 @@ size_t net::socket::recvfrom(void* buf, size_t len, int flags_, sockaddr* from, 
 
 size_t net::socket::send(const void* buf, size_t len, int flags, std::error_code& e) noexcept
 {
-    WSABUF buffer{ static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
+    WSABUF buffer { static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
     DWORD numberOfBytesSend = 0;
     int ret = WSASend(m_Handle, &buffer, 1, &numberOfBytesSend, flags, nullptr, nullptr);
     if (ret < 0)
@@ -154,7 +154,7 @@ size_t net::socket::send(const void* buf, size_t len, int flags, std::error_code
 
 size_t net::socket::sendto(const void* buf, size_t len, int flags, const sockaddr* addr, size_t addr_len, std::error_code& e) noexcept
 {
-    WSABUF buffer{ static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
+    WSABUF buffer { static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
     DWORD numberOfBytesSend = 0;
     int ret = WSASendTo(m_Handle, &buffer, 1, &numberOfBytesSend, flags, addr, static_cast<int>(addr_len), nullptr, nullptr);
     if (ret < 0)
@@ -260,32 +260,31 @@ void net::socket::shutdown(int way, std::error_code& e) noexcept
         ASSIGN_ZERO(e);
 }
 
-#include <iostream>
-
 namespace net {
 namespace impl {
 
-    struct WsaWrapper {
+    class WsaInit {
+        static WSADATA wsa_data;
+        static bool wsa_inited;
 
-        WsaWrapper()
-        {
-            int error = WSAStartup(MAKEWORD(2, 2), &data);
-            if (error)
-                throw std::system_error(WSAGetLastError(), std::system_category());
-        }
-
-        ~WsaWrapper() noexcept(false)
-        {
-            int error = WSACleanup();
-            if (error)
-                throw std::system_error(WSAGetLastError(), std::system_category());
-        }
-
-        WSADATA data;
+    public:
+        WsaInit();
+        ~WsaInit();
     };
 
-    WsaWrapper g_wsa{};
-    WsaWrapper* p_wsa = &g_wsa;
-
 } // namespace impl
+
 } // namespace net
+
+WSADATA net::impl::WsaInit::wsa_data;
+bool net::impl::WsaInit::wsa_inited = false;
+
+net::impl::WsaInit::WsaInit()
+{
+    if (!wsa_inited) {
+        int error = WSAStartup(MAKEWORD(2, 2), &wsa_data);
+        if (error)
+            throw std::system_error(WSAGetLastError(), std::system_category());
+        wsa_inited = true;
+    }
+}

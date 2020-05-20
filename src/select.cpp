@@ -1,5 +1,5 @@
-#include <cppnet/select.hpp>
 #include <algorithm>
+#include <cppnet/select.hpp>
 
 bool net::select::add(socket::native_handle_type fd, int events)
 {
@@ -11,7 +11,7 @@ bool net::select::add(socket::native_handle_type fd, int events)
     if (it != fdlist.end())
         return false;
 
-    fdlist.emplace_back(selectfd{fd, events, 0});
+    fdlist.emplace_back(selectfd { fd, events, 0 });
     return true;
 }
 
@@ -33,7 +33,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
 {
     std::error_code e;
     auto result = execute(timeout, e);
-    if (e) throw std::system_error(e);
+    if (e)
+        throw std::system_error(e);
     return result;
 }
 
@@ -72,8 +73,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::microsecond
     {
         timeval tm;
         if (timeout) {
-            tm.tv_sec = duration_cast<seconds>(*timeout).count();
-            tm.tv_usec = (*timeout % 1s).count();
+            tm.tv_sec = static_cast<decltype(tm.tv_sec)>((*timeout).count());
+            tm.tv_usec = static_cast<decltype(tm.tv_sec)>((*timeout % 1s).count());
         }
         int ret = ::select(maxfd, &rlist, &wlist, &xlist, timeout ? &tm : nullptr);
         if (ret < 0) {
@@ -106,7 +107,8 @@ net::select_return_t net::select::execute(std::optional<std::chrono::nanoseconds
 {
     std::error_code e;
     auto result = execute(timeout, sigmask, e);
-    if (e) throw std::system_error(e);
+    if (e)
+        throw std::system_error(e);
     return result;
 }
 

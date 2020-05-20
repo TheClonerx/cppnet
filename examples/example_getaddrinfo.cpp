@@ -3,7 +3,10 @@
 #include <string>
 
 #include <cppnet/getaddrinfo.hpp>
+
+#ifndef _WIN32
 #include <arpa/inet.h>
+#endif
 
 std::string addr_to_str(const sockaddr_storage* addr); // browser friendly address
 

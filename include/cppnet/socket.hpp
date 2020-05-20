@@ -12,6 +12,10 @@
 
 #include <cppnet/address.hpp>
 
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
+
 namespace net {
 
 class socket {
@@ -27,7 +31,7 @@ public:
     constexpr socket() noexcept = default;
 
     constexpr socket(socket&& rhs) noexcept
-        : m_Handle{ rhs.m_Handle }
+        : m_Handle { rhs.m_Handle }
     {
         rhs.m_Handle = invalid_handle;
     }
@@ -49,7 +53,8 @@ private:
     } from_native_handle {};
     constexpr socket(from_native_handle_t, native_handle_type handle) noexcept
         : m_Handle { handle }
-    {}
+    {
+    }
 
 public:
     static std::pair<socket, socket> pair(int family = AF_UNIX, int type = SOCK_STREAM, int protocol = 0);
@@ -231,9 +236,10 @@ public:
     void close();
     void close(std::error_code&) noexcept;
 
-    inline std::error_code error() const noexcept {
+    inline std::error_code error() const noexcept
+    {
         auto error_number = getsockopt<int>(SOL_SOCKET, SO_ERROR);
-        return std::error_code{ error_number, std::system_category() };
+        return std::error_code { error_number, std::system_category() };
     }
 
     inline friend void swap(socket& lhs, socket& rhs) noexcept
@@ -242,7 +248,11 @@ public:
         swap(lhs.m_Handle, rhs.m_Handle);
     }
 
-#define SOCKET_COMPARATION(op) constexpr bool operator op(socket const& rhs) const noexcept { return m_Handle op rhs.m_Handle; }
+#define SOCKET_COMPARATION(op)                                   \
+    constexpr bool operator op(socket const& rhs) const noexcept \
+    {                                                            \
+        return m_Handle op rhs.m_Handle;                         \
+    }
     SOCKET_COMPARATION(==)
     SOCKET_COMPARATION(!=)
     SOCKET_COMPARATION(<)
@@ -251,11 +261,13 @@ public:
     SOCKET_COMPARATION(>=)
 #undef SOCKET_COMPARATION
 
-    constexpr operator bool() const noexcept { return m_Handle != invalid_handle; }
+    constexpr operator bool() const noexcept
+    {
+        return m_Handle != invalid_handle;
+    }
 
 protected:
     native_handle_type m_Handle = invalid_handle;
 };
 
 } // namespace net
-
