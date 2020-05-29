@@ -96,6 +96,6 @@ protected:
     native_handle_type m_handle;
 private:
     std::vector<epoll_event> data;
-    size_t size;
+    size_t size = 0;
 };
 } // net
