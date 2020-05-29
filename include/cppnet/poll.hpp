@@ -15,10 +15,6 @@
 
 #include <cppnet/socket.hpp>
 
-#ifndef CPPNET_IMPL
-#include <cppnet/wsa_init.hpp>
-#endif
-
 namespace net {
 
 class poll {

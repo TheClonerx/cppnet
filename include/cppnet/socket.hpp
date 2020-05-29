@@ -5,16 +5,15 @@
 
 #ifdef _WIN32
 #include <WinSock2.h>
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
 #else
 #include <netdb.h>
 #include <sys/socket.h>
 #endif
 
 #include <cppnet/address.hpp>
-
-#ifndef CPPNET_IMPL
-#include <cppnet/wsa_init.hpp>
-#endif
 
 namespace net {
 

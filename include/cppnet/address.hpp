@@ -6,6 +6,9 @@
 
 #ifdef _WIN32
 #include <WinSock2.h>
+#ifndef CPPNET_IMPL
+#include <cppnet/wsa_init.hpp>
+#endif
 #else
 #include <arpa/inet.h> // inet_pton
 #include <netdb.h> // struct sockaddr_in
@@ -13,9 +16,7 @@
 #include <sys/un.h> // struct sockaddr_un
 #endif
 
-#ifndef CPPNET_IMPL
-#include <cppnet/wsa_init.hpp>
-#endif
+
 
 namespace net {
 

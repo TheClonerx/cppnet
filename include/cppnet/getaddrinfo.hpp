@@ -15,10 +15,6 @@
 
 #include <cppnet/address.hpp>
 
-#ifndef CPPNET_IMPL
-#include <cppnet/wsa_init.hpp>
-#endif
-
 namespace net {
 
 const std::error_category& addrinfo_category() noexcept;
@@ -52,7 +48,7 @@ template <typename It>
 It getaddrinfo(It start, It stop, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     static_assert(std::is_assignable_v<decltype(*start), address_info>, "Iterator value type must be assignable to net::address_info");
-    ::addrinfo hints{};
+    ::addrinfo hints {};
 
     hints.ai_family = family;
     hints.ai_socktype = type;
@@ -95,7 +91,7 @@ template <typename It>
 It getaddrinfo(It it, const char* node, const char* service, int family, int type, int protocol, int flags, std::error_code& e) noexcept
 {
     static_assert(std::is_assignable_v<decltype(*it), address_info>, "Iterator value type must be assignable to net::address_info");
-    ::addrinfo hints{};
+    ::addrinfo hints {};
 
     hints.ai_flags = flags;
     hints.ai_family = family;
