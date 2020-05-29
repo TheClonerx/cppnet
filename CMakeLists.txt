@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(cppnet VERSION 1.1.2 LANGUAGES CXX)
+project(cppnet VERSION 1.1.3 LANGUAGES CXX)
 
 option(CPPNET_BUILD_EXAMPLES "Build the cppnet examples" OFF)
 
