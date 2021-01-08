@@ -10,7 +10,7 @@ using namespace std::literals;
 int main()
 {
     net::select selector;
-    selector.add(0, net::select::events::read); // adds stdout to read event
+    selector.add(0, net::select::events::read);
     std::cout << "Now selecting stdin...\n";
     auto selected = selector.execute(5s);
     if (!selected.reads)

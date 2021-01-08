@@ -39,14 +39,14 @@ int main(int argc, const char** argv) try {
     std::clog << "Sending request..." << std::endl;
     sock.send(request);
 
+    
     std::clog << "Receiving response..." << std::endl;
-    std::string buff(max_bytes, '\0');
-    buff.resize(sock.recv(buff.data(), buff.size()));
+    auto buff = std::make_unique<char[]>(max_bytes);
+    auto received = sock.recv(buff.get(), max_bytes);
 
     std::clog << "Done.\n" << std::endl;
 
-    std::cout << buff << std::endl;
-
+    std::cout.write(buff.get(), received) << std::endl;
 } catch (std::system_error& e) {
     std::cerr << e.code().category().name()
               << " error (" << e.code().value() << "):\n\t"
