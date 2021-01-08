@@ -1,6 +1,11 @@
 #include <cppnet/address.hpp>
 #include <cppnet/getaddrinfo.hpp>
 
+#ifdef _WIN32
+#define ERROR_NUMBER WSAGetLastError()
+#else
+#define ERROR_NUMBER errno
+#endif
 
 net::address net::address::from_ipv4(std::string_view host, std::uint16_t port)
 {
@@ -8,9 +13,11 @@ net::address net::address::from_ipv4(std::string_view host, std::uint16_t port)
     constexpr size_t len = sizeof(addr);
 
     addr.sin_family = AF_INET;
-    int success = inet_pton(AF_INET, host.data(), &addr.sin_addr);
-    if (!success)
-        throw std::runtime_error("Error parsing dotted ipv4 address");
+    int result = inet_pton(AF_INET, host.data(), &addr.sin_addr);
+    if (result == 0)
+        throw std::invalid_argument("the address was not parseable in the specified address family");
+    else if (result == -1)
+        throw std::system_error(ERROR_NUMBER, std::system_category());
     addr.sin_port = htons(port);
 
     address ret;
@@ -55,9 +62,11 @@ net::address net::address::from_ipv6(std::string_view host, std::uint16_t port, 
     constexpr size_t len = sizeof(addr);
 
     addr.sin6_family = AF_INET6;
-    int success = inet_pton(AF_INET6, host.data(), &addr.sin6_addr);
-    if (!success)
-        throw std::runtime_error("Error parsing hex ipv6 address");
+    int result = inet_pton(AF_INET6, host.data(), &addr.sin6_addr);
+    if (result == 0)
+        throw std::invalid_argument("the address was not parseable in the specified address family");
+    else if (result == -1)
+        throw std::system_error(ERROR_NUMBER, std::system_category());
     addr.sin6_port = htons(port);
     addr.sin6_flowinfo = flowinfo;
     addr.sin6_scope_id = scopeid;
@@ -109,11 +118,10 @@ net::address net::address::from_unix(std::string_view path)
     constexpr size_t len = sizeof(addr);
 
     addr.sun_family = AF_UNIX;
-    if (path.size() > sizeof(addr.sun_path) - 1) {
+    if (path.size() > sizeof(addr.sun_path) - 1)
         throw std::length_error("Path is too long");
-    }  else { // zero size paths are unnamed, std::memcpy will do nothing in this case
+    else // zero size paths are unnamed, std::memcpy will do nothing in this case
         std::memcpy(addr.sun_path, path.data(), path.size());
-    }
 
     address ret;
     std::memcpy(&ret.m_socket_address, &addr, len);
