@@ -39,7 +39,7 @@ include(CMakePackageConfigHelpers)
 target_include_directories(
     cppnet PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/include/>
+    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/cppnet/>
 )
 
 write_basic_package_version_file(
@@ -51,26 +51,50 @@ write_basic_package_version_file(
 install(
     TARGETS cppnet
     EXPORT ${PROJECT_NAME}-config
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/${PROJECT_NAME}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/"
 )
 
 install(
     EXPORT ${PROJECT_NAME}-config
     NAMESPACE ${PROJECT_NAME}::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}"
 )
 
 install(
-    DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/${PROJECT_NAME}
+    FILES 
+        "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/address.hpp"
+        "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/getaddrinfo.hpp"
+        "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/poll.hpp"
+        "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/select.hpp"
+        "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/socket.hpp"
+    DESTINATION
+        "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/cppnet"
 )
+
+if(WIN32)
+    install(
+        FILES 
+            "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/wsa_init.hpp"
+        DESTINATION
+            "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/cppnet"
+    )
+endif()
+
+if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux")
+    install(
+        FILES 
+            "${CMAKE_CURRENT_LIST_DIR}/include/cppnet/epoll.hpp"
+        DESTINATION
+            "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}-${PROJECT_VERSION}/cppnet"
+    )
+endif()
 
 install(
     FILES "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}/${PROJECT_NAME}-config-version.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}-${PROJECT_VERSION}"
 )
 
 install(
     FILES "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}-${PROJECT_VERSION}
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/${PROJECT_NAME}-${PROJECT_VERSION}"
 )
