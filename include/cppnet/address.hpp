@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint> // UINT16_MAX
 #include <cstring> // std::memcpy
 #include <stdexcept> // class std::runtime_error
 #include <string_view> // class std::string_view
@@ -16,8 +17,6 @@
 #include <sys/un.h> // struct sockaddr_un
 #endif
 
-
-
 namespace net {
 
 class addrinfo;
@@ -31,7 +30,7 @@ constexpr struct localhost_t {
 class address {
 
 public:
-    constexpr static std::uint16_t invalid_family = ~static_cast<std::uint16_t>(0);
+    constexpr static std::uint16_t invalid_family = UINT16_MAX;
     friend class socket;
 
     constexpr address() noexcept
