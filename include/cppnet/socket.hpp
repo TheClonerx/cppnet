@@ -260,7 +260,7 @@ public:
     SOCKET_COMPARATION(>=)
 #undef SOCKET_COMPARATION
 
-    constexpr operator bool() const noexcept
+    explicit constexpr operator bool() const noexcept
     {
         return m_Handle != invalid_handle;
     }
