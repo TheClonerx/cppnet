@@ -34,9 +34,9 @@ main.cpp
 
 int main()
 {
-    // get the address info for google
+    // get the address info for www.example.com
     net::address_info ainfo = net::getaddrinfo("www.example.com", "80", AF_UNSPEC, SOCK_STREAM, IPPROTO_TCP);
-    // create socket for the returned address
+    // create socket for the returned address family
     net::socket sock{ ainfo.family(), ainfo.type(), ainfo.protocol() };
     // connect to the given address
     sock.connect(ainfo.address());
