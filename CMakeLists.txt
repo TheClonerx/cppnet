@@ -20,12 +20,12 @@ if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux") # Linux specific
     target_sources(cppnet PRIVATE src/epoll.cpp)
 endif()
 
-if(WIN32) # Windows specific
+if(WIN32 OR MINGW) # Windows specific
     target_sources(cppnet PRIVATE src/socket_win32_impl.cpp)
-    target_link_libraries(cppnet wsock32 ws2_32)
+    target_link_libraries(cppnet PUBLIC wsock32 ws2_32)
 endif()
 
-if(UNIX) # Unix specific
+if(UNIX AND NOT MINGW) # Unix specific
     target_sources(cppnet PRIVATE src/socket_unix_impl.cpp)
 endif()
 

@@ -1,7 +1,7 @@
 #ifndef CPPNET_WSA_INIT_HPP
 #define CPPNET_WSA_INIT_HPP
 
-#include <WinSock2.h>
+#include <winsock2.h>
 
 namespace net {
 namespace impl {

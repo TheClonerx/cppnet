@@ -1,4 +1,6 @@
 #pragma once
+#define _WIN32_WINNT 0x601 // Windows 7
+
 #include <chrono>
 #include <optional>
 #include <system_error>
@@ -6,7 +8,7 @@
 #include <vector>
 
 #ifdef _WIN32
-#include <WinSock2.h>
+#include <winsock2.h>
 #else
 // if someone is going to use net::poll
 // they may need some constats defined here

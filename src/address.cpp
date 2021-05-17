@@ -1,8 +1,10 @@
+#define _WIN32_WINNT 0x601 // Windows 7
 #include <cppnet/address.hpp>
 #include <cppnet/getaddrinfo.hpp>
 
 #ifdef _WIN32
 #define ERROR_NUMBER WSAGetLastError()
+#include <ws2tcpip.h>
 #else
 #define ERROR_NUMBER errno
 #endif

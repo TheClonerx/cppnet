@@ -6,7 +6,7 @@
 #include <string_view> // class std::string_view
 
 #ifdef _WIN32
-#include <WinSock2.h>
+#include <winsock2.h>
 #ifndef CPPNET_IMPL
 #include <cppnet/wsa_init.hpp>
 #endif
@@ -34,7 +34,7 @@ public:
     friend class socket;
 
     constexpr address() noexcept
-        : m_socket_address { invalid_family }
+        : m_socket_address { static_cast<decltype(sockaddr_storage::ss_family)>(invalid_family) }
         , m_socket_address_size { sizeof(m_socket_address) }
     {
     }

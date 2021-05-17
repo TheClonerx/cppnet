@@ -4,7 +4,7 @@
 #include <utility>
 
 #ifdef _WIN32
-#include <WinSock2.h>
+#include <winsock2.h>
 #ifndef CPPNET_IMPL
 #include <cppnet/wsa_init.hpp>
 #endif

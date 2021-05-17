@@ -1,11 +1,12 @@
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
 #include <cppnet/getaddrinfo.hpp>
 
 #ifndef _WIN32
 #include <arpa/inet.h>
+#include <mstcpip.h>
 #endif
 
 std::string addr_to_str(const sockaddr_storage* addr); // browser friendly address
@@ -40,7 +41,8 @@ int main(int argc, const char* argv[]) try {
         std::cout << '\n';
     }
 } catch (std::system_error& e) {
-    std::cerr << '\n' << e.code().category().name()
+    std::cerr << '\n'
+              << e.code().category().name()
               << " error (" << e.code().value() << "):\n\t"
               << e.what() << '\n';
 } catch (std::exception& e) {
@@ -53,10 +55,20 @@ std::string addr_to_str(const sockaddr_storage* addr) // browser friendly addres
     std::string buffer(64, '\0');
     if (addr->ss_family == AF_INET) {
         auto in_addr = reinterpret_cast<const sockaddr_in*>(addr);
+#if _WIN32
+        ULONG size = std::size(buffer);
+        RtlIpv4AddressToStringExA(&in_addr->sin_addr, 0, std::data(buffer), &size);
+#else
         inet_ntop(AF_INET, &in_addr->sin_addr, std::data(buffer), std::size(buffer));
+#endif
     } else if (addr->ss_family == AF_INET6) {
         auto in6_addr = reinterpret_cast<const sockaddr_in6*>(addr);
+#if _WIN32
+        ULONG size = std::size(buffer);
+        RtlIpv6AddressToStringExA(&in6_addr->sin6_addr, 0, 0, std::data(buffer), &size);
+#else
         inet_ntop(AF_INET6, &in6_addr->sin6_addr, std::data(buffer), std::size(buffer));
+#endif
     } else {
         buffer = "???";
     }
