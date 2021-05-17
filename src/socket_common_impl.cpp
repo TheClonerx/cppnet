@@ -16,7 +16,7 @@
 
 net::socket::~socket() noexcept
 {
-    if (m_Handle != invalid_handle)
+    if (m_handle != invalid_handle)
         close();
 }
 

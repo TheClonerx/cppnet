@@ -30,15 +30,15 @@ public:
     constexpr socket() noexcept = default;
 
     constexpr socket(socket&& rhs) noexcept
-        : m_Handle { rhs.m_Handle }
+        : m_handle { rhs.m_handle }
     {
-        rhs.m_Handle = invalid_handle;
+        rhs.m_handle = invalid_handle;
     }
 
     constexpr socket& operator=(socket&& rhs) noexcept
     {
-        m_Handle = rhs.m_Handle;
-        rhs.m_Handle = invalid_handle;
+        m_handle = rhs.m_handle;
+        rhs.m_handle = invalid_handle;
         return *this;
     }
 
@@ -51,7 +51,7 @@ private:
     static constexpr struct from_native_handle_t {
     } from_native_handle {};
     constexpr socket(from_native_handle_t, native_handle_type handle) noexcept
-        : m_Handle { handle }
+        : m_handle { handle }
     {
     }
 
@@ -214,7 +214,7 @@ public:
 
     constexpr native_handle_type native_handle() const noexcept
     {
-        return m_Handle;
+        return m_handle;
     }
 
     int family() const;
@@ -244,13 +244,13 @@ public:
     inline friend void swap(socket& lhs, socket& rhs) noexcept
     {
         using std::swap;
-        swap(lhs.m_Handle, rhs.m_Handle);
+        swap(lhs.m_handle, rhs.m_handle);
     }
 
 #define SOCKET_COMPARATION(op)                                   \
     constexpr bool operator op(socket const& rhs) const noexcept \
     {                                                            \
-        return m_Handle op rhs.m_Handle;                         \
+        return m_handle op rhs.m_handle;                         \
     }
     SOCKET_COMPARATION(==)
     SOCKET_COMPARATION(!=)
@@ -262,11 +262,11 @@ public:
 
     explicit constexpr operator bool() const noexcept
     {
-        return m_Handle != invalid_handle;
+        return m_handle != invalid_handle;
     }
 
 protected:
-    native_handle_type m_Handle = invalid_handle;
+    native_handle_type m_handle = invalid_handle;
 };
 
 } // namespace net
