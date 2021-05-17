@@ -13,6 +13,8 @@ target_sources(cppnet PRIVATE
     src/socket_common_impl.cpp
     src/address.cpp
 )
+set_target_properties(cppnet PROPERTIES VERSION ${PROJECT_VERSION})
+set_target_properties(cppnet PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
 
 if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux") # Linux specific
     target_sources(cppnet PRIVATE src/epoll.cpp)
