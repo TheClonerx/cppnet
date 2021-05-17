@@ -8,31 +8,33 @@
 #endif
 #include <sys/types.h>
 
-const std::error_category& net::addrinfo_category() noexcept
-{
-    class addrinfo_category_t : public std::error_category {
-    public:
-        const char* name() const noexcept override
-        {
-            static const char val[] = "addrinfo";
-            return val;
-        }
+namespace {
+class addrinfo_error_category_t : public std::error_category {
+public:
+    char const* name() const noexcept override
+    {
+        return "addrinfo";
+    }
 
-        std::string message(int ecode) const override
-        {
+    std::string message(int ecode) const override
+    {
 #ifdef _WIN32
-            return gai_strerrorA(ecode);
+        return gai_strerrorA(ecode);
 #else
-            return gai_strerror(ecode);
+        return gai_strerror(ecode);
 #endif
-        }
-    };
-
-    const static addrinfo_category_t val {};
-    return val;
+    }
+};
 }
 
-net::address_info::address_info(int /*family*/, int type, int protocol, const sockaddr* addr, size_t len, const char* canonname) noexcept
+static addrinfo_error_category_t const addrinfo_error_category {};
+
+std::error_category const& net::addrinfo_category() noexcept
+{
+    return addrinfo_error_category;
+}
+
+net::address_info::address_info(int /*family*/, int type, int protocol, sockaddr const* addr, size_t len, char const* canonname) noexcept
     : m_type { type }
     , m_protocol { protocol }
     , m_address { addr, len }
@@ -55,7 +57,7 @@ int net::address_info::protocol() const noexcept
     return m_protocol;
 }
 
-const net::address& net::address_info::address() const noexcept
+net::address const& net::address_info::address() const noexcept
 {
     return m_address;
 }
