@@ -15,6 +15,13 @@
 
 #include <cppnet/address.hpp>
 
+#if __cplusplus >= 202002L
+#include <version>
+#ifdef __cpp_lib_three_way_comparison
+#include <compare>
+#endif
+#endif
+
 namespace net {
 
 class socket {
@@ -247,6 +254,7 @@ public:
         swap(lhs.m_handle, rhs.m_handle);
     }
 
+#ifndef __cpp_lib_three_way_comparison
 #define SOCKET_COMPARATION(op)                                   \
     constexpr bool operator op(socket const& rhs) const noexcept \
     {                                                            \
@@ -259,6 +267,20 @@ public:
     SOCKET_COMPARATION(<=)
     SOCKET_COMPARATION(>=)
 #undef SOCKET_COMPARATION
+#else
+    constexpr bool operator==(socket const& rhs) const noexcept
+    {
+        return m_handle == rhs.m_handle;
+    }
+
+    constexpr std::partial_ordering operator<=>(socket const& rhs) const noexcept
+    {
+        if (m_handle == rhs.m_handle && rhs.m_handle == invalid_handle)
+            return std::partial_ordering::unordered;
+        else
+            return m_handle <=> rhs.m_handle;
+    }
+#endif
 
     explicit constexpr operator bool() const noexcept
     {
