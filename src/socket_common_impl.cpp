@@ -18,6 +18,8 @@ net::socket::~socket() noexcept
 {
     if (m_handle != invalid_handle)
         close();
+    // while close(2) might fail in unix, it is ensured to have closed the file descriptor anyways.
+    // however, it is not clear to me whatever, if closesocket in Win32 returns an error, the socket was closed 
 }
 
 std::pair<net::socket, net::socket> net::socket::pair(int family, int type, int protocol)
