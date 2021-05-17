@@ -5,16 +5,16 @@
 #define ASSIGN_ZERO(e) e.assign(0, std::system_category())
 
 net::socket::socket(int af, int type, int proto)
-    : m_Handle(::socket(af, type, proto))
+    : m_handle(::socket(af, type, proto))
 {
-    if (m_Handle == invalid_handle)
+    if (m_handle == invalid_handle)
         THROW_LAST_ERROR;
 }
 
 net::socket::socket(int af, int type, int proto, std::error_code& e) noexcept
-    : m_Handle(::socket(af, type, proto))
+    : m_handle(::socket(af, type, proto))
 {
-    if (m_Handle == invalid_handle)
+    if (m_handle == invalid_handle)
         ASSIGN_LAST_ERROR(e);
     else
         ASSIGN_ZERO(e);
@@ -83,7 +83,7 @@ net::address net::socket::getsockname(std::error_code& e) noexcept
 {
     sockaddr_storage addr;
     int addr_len;
-    int ret = ::getsockname(m_Handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
+    int ret = ::getsockname(m_handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
     if (ret < 0) {
         ASSIGN_LAST_ERROR(e);
         return {};
@@ -97,7 +97,7 @@ net::address net::socket::getpeername(std::error_code& e) noexcept
 {
     sockaddr_storage addr;
     int addr_len;
-    int ret = ::getpeername(m_Handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
+    int ret = ::getpeername(m_handle, reinterpret_cast<sockaddr*>(&addr), &addr_len);
     if (ret < 0) {
         ASSIGN_LAST_ERROR(e);
         return {};
@@ -113,7 +113,7 @@ size_t net::socket::recv(void* buf, size_t len, int flags_, std::error_code& e) 
     DWORD numberOfBytesRecvd = 0;
     DWORD flags = flags_;
 
-    int ret = ::WSARecv(m_Handle, &buffer, 1, &numberOfBytesRecvd, &flags, nullptr, nullptr);
+    int ret = ::WSARecv(m_handle, &buffer, 1, &numberOfBytesRecvd, &flags, nullptr, nullptr);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -128,7 +128,7 @@ size_t net::socket::recvfrom(void* buf, size_t len, int flags_, sockaddr* from, 
     DWORD numberOfBytesRecvd = 0;
     DWORD flags = flags_;
     INT fromLen;
-    int ret = WSARecvFrom(m_Handle, &buffer, 1, &numberOfBytesRecvd, &flags, from, &fromLen, nullptr, nullptr);
+    int ret = WSARecvFrom(m_handle, &buffer, 1, &numberOfBytesRecvd, &flags, from, &fromLen, nullptr, nullptr);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else {
@@ -143,7 +143,7 @@ size_t net::socket::send(const void* buf, size_t len, int flags, std::error_code
 {
     WSABUF buffer { static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
     DWORD numberOfBytesSend = 0;
-    int ret = WSASend(m_Handle, &buffer, 1, &numberOfBytesSend, flags, nullptr, nullptr);
+    int ret = WSASend(m_handle, &buffer, 1, &numberOfBytesSend, flags, nullptr, nullptr);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -156,7 +156,7 @@ size_t net::socket::sendto(const void* buf, size_t len, int flags, const sockadd
 {
     WSABUF buffer { static_cast<ULONG>(len), reinterpret_cast<CHAR*>(const_cast<void*>(buf)) };
     DWORD numberOfBytesSend = 0;
-    int ret = WSASendTo(m_Handle, &buffer, 1, &numberOfBytesSend, flags, addr, static_cast<int>(addr_len), nullptr, nullptr);
+    int ret = WSASendTo(m_handle, &buffer, 1, &numberOfBytesSend, flags, addr, static_cast<int>(addr_len), nullptr, nullptr);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -167,7 +167,7 @@ size_t net::socket::sendto(const void* buf, size_t len, int flags, const sockadd
 
 void net::socket::connect(const sockaddr* addr, size_t addr_len, std::error_code& e) noexcept
 {
-    int ret = ::connect(m_Handle, addr, static_cast<int>(addr_len));
+    int ret = ::connect(m_handle, addr, static_cast<int>(addr_len));
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -177,7 +177,7 @@ void net::socket::connect(const sockaddr* addr, size_t addr_len, std::error_code
 net::socket net::socket::accept(sockaddr* addr, size_t* addr_len, std::error_code& e) noexcept
 {
     int len;
-    SOCKET new_handle = ::accept(m_Handle, addr, &len);
+    SOCKET new_handle = ::accept(m_handle, addr, &len);
     if (new_handle == invalid_handle)
         ASSIGN_LAST_ERROR(e);
     else {
@@ -189,7 +189,7 @@ net::socket net::socket::accept(sockaddr* addr, size_t* addr_len, std::error_cod
 
 void net::socket::listen(int backlog, std::error_code& e) noexcept
 {
-    int ret = ::listen(m_Handle, backlog);
+    int ret = ::listen(m_handle, backlog);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -198,7 +198,7 @@ void net::socket::listen(int backlog, std::error_code& e) noexcept
 
 void net::socket::bind(const sockaddr* addr, size_t addr_len, std::error_code& e) noexcept
 {
-    int ret = ::bind(m_Handle, addr, static_cast<int>(addr_len));
+    int ret = ::bind(m_handle, addr, static_cast<int>(addr_len));
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -208,7 +208,7 @@ void net::socket::bind(const sockaddr* addr, size_t addr_len, std::error_code& e
 void net::socket::getsockopt(int level, int name, void* buf, size_t* len_, std::error_code& e) const noexcept
 {
     int len;
-    int ret = ::getsockopt(m_Handle, level, name, static_cast<char*>(buf), &len);
+    int ret = ::getsockopt(m_handle, level, name, static_cast<char*>(buf), &len);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else {
@@ -219,7 +219,7 @@ void net::socket::getsockopt(int level, int name, void* buf, size_t* len_, std::
 
 void net::socket::setsockopt(int level, int name, const void* buf, size_t len, std::error_code& e) noexcept
 {
-    int ret = ::setsockopt(m_Handle, level, name, static_cast<const char*>(buf), static_cast<int>(len));
+    int ret = ::setsockopt(m_handle, level, name, static_cast<const char*>(buf), static_cast<int>(len));
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -234,7 +234,7 @@ int net::socket::protocol(std::error_code& e) const noexcept
 void net::socket::setblocking(bool blocks, std::error_code& e) noexcept
 {
     u_long b = blocks;
-    int ret = ::ioctlsocket(m_Handle, FIONBIO, &b);
+    int ret = ::ioctlsocket(m_handle, FIONBIO, &b);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
@@ -243,8 +243,8 @@ void net::socket::setblocking(bool blocks, std::error_code& e) noexcept
 
 void net::socket::close(std::error_code& e) noexcept
 {
-    if (m_Handle != invalid_handle) {
-        int ret = ::closesocket(m_Handle);
+    if (m_handle != invalid_handle) {
+        int ret = ::closesocket(m_handle);
         if (ret < 0)
             ASSIGN_LAST_ERROR(e);
     }
@@ -253,7 +253,7 @@ void net::socket::close(std::error_code& e) noexcept
 
 void net::socket::shutdown(int way, std::error_code& e) noexcept
 {
-    int ret = ::shutdown(m_Handle, way);
+    int ret = ::shutdown(m_handle, way);
     if (ret < 0)
         ASSIGN_LAST_ERROR(e);
     else
