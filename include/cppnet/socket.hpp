@@ -75,12 +75,12 @@ public:
     size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size);
     size_t recvfrom(void* buffer, size_t buffer_size, int flags, sockaddr* address, size_t* address_size, std::error_code&) noexcept;
 
-    inline size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr)
+    size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr)
     {
         return recvfrom(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size);
     }
 
-    inline size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr, std::error_code& e) noexcept
+    size_t recvfrom(void* buffer, size_t buffer_size, int flags, address& addr, std::error_code& e) noexcept
     {
         return recvfrom(buffer, buffer_size, flags, reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size, e);
     }
@@ -88,11 +88,11 @@ public:
     size_t send(const void* buffer, size_t buffer_size, int flags = 0);
     size_t send(const void* buffer, size_t buffer_size, int flags, std::error_code&) noexcept;
 
-    inline size_t send(std::string_view buffer, int flags = 0)
+    size_t send(std::string_view buffer, int flags = 0)
     {
         return send(buffer.data(), buffer.size(), flags);
     }
-    inline size_t send(std::string_view buffer, int flags, std::error_code& e) noexcept
+    size_t send(std::string_view buffer, int flags, std::error_code& e) noexcept
     {
         return send(buffer.data(), buffer.size(), flags, e);
     }
@@ -100,12 +100,12 @@ public:
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size);
     size_t sendto(const void* buffer, size_t buffer_size, int flags, const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr)
+    size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr)
     {
         return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr const*>(&addr.m_socket_address), addr.m_socket_address_size);
     }
 
-    inline size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr, std::error_code& e) noexcept
+    size_t sendto(const void* buffer, size_t buffer_size, int flags, address const& addr, std::error_code& e) noexcept
     {
         return sendto(buffer, buffer_size, flags, reinterpret_cast<sockaddr const*>(&addr.m_socket_address), addr.m_socket_address_size, e);
     }
@@ -113,12 +113,12 @@ public:
     void connect(const sockaddr* address, size_t address_size);
     void connect(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    inline void connect(const address& addr)
+    void connect(const address& addr)
     {
         connect(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
     }
 
-    inline void connect(const address& addr, std::error_code& e) noexcept
+    void connect(const address& addr, std::error_code& e) noexcept
     {
         connect(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
     }
@@ -126,22 +126,22 @@ public:
     socket accept(sockaddr* address, size_t* address_size);
     socket accept(sockaddr* address, size_t* address_size, std::error_code&) noexcept;
 
-    inline socket accept()
+    socket accept()
     {
         return accept(nullptr, nullptr);
     }
 
-    inline socket accept(std::error_code& e) noexcept
+    socket accept(std::error_code& e) noexcept
     {
         return accept(nullptr, nullptr, e);
     }
 
-    inline socket accept(address& addr)
+    socket accept(address& addr)
     {
         return accept(reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size);
     }
 
-    inline socket accept(address& addr, std::error_code& e) noexcept
+    socket accept(address& addr, std::error_code& e) noexcept
     {
         return accept(reinterpret_cast<sockaddr*>(&addr.m_socket_address), &addr.m_socket_address_size, e);
     }
@@ -152,12 +152,12 @@ public:
     void bind(const sockaddr* address, size_t address_size);
     void bind(const sockaddr* address, size_t address_size, std::error_code&) noexcept;
 
-    inline void bind(const address& addr, std::error_code& e) noexcept
+    void bind(const address& addr, std::error_code& e) noexcept
     {
         bind(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size, e);
     }
 
-    inline void bind(const address& addr)
+    void bind(const address& addr)
     {
         bind(reinterpret_cast<const sockaddr*>(&addr.m_socket_address), addr.m_socket_address_size);
     }
@@ -242,13 +242,13 @@ public:
     void close();
     void close(std::error_code&) noexcept;
 
-    inline std::error_code error() const noexcept
+    std::error_code error() const noexcept
     {
         auto error_number = getsockopt<int>(SOL_SOCKET, SO_ERROR);
         return std::error_code { error_number, std::system_category() };
     }
 
-    inline friend void swap(socket& lhs, socket& rhs) noexcept
+    friend void swap(socket& lhs, socket& rhs) noexcept
     {
         using std::swap;
         swap(lhs.m_handle, rhs.m_handle);

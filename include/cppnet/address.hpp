@@ -54,7 +54,7 @@ public:
     }
 
 private:
-    inline static sockaddr_storage sockaddr_storage_from_sockaddr_and_size(const sockaddr* addr, size_t size) noexcept
+    static sockaddr_storage sockaddr_storage_from_sockaddr_and_size(const sockaddr* addr, size_t size) noexcept
     {
         sockaddr_storage ret {};
         std::memcpy(&ret, addr, size);
@@ -62,7 +62,7 @@ private:
     }
 
 public:
-    inline address(sockaddr const* addr, std::size_t len) noexcept
+    address(sockaddr const* addr, std::size_t len) noexcept
         : m_socket_address { sockaddr_storage_from_sockaddr_and_size(addr, len) }
         , m_socket_address_size { len }
     {
