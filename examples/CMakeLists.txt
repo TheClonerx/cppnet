@@ -2,7 +2,7 @@ find_package(Threads)
 
 add_executable(example_getaddrinfo example_getaddrinfo.cpp)
 target_compile_features(example_getaddrinfo PUBLIC cxx_std_17)
-target_link_libraries(example_getaddrinfo cppnet ${CMAKE_THREAD_LIBS_INIT} ntdll)
+target_link_libraries(example_getaddrinfo cppnet ${CMAKE_THREAD_LIBS_INIT})
 
 add_executable(example_poll example_poll.cpp)
 target_compile_features(example_poll PUBLIC cxx_std_17)

@@ -131,3 +131,63 @@ net::address net::address::from_unix(std::string_view path)
     return ret;
 }
 #endif
+
+#include <ostream>
+
+#ifndef _WIN32
+#include <arpa/inet.h>
+#include <mstcpip.h>
+#endif
+
+namespace net {
+
+    std::ostream &operator<<(std::ostream &os, address const &address)
+    {
+        switch (address.address_pointer()->ss_family) {
+        case AF_INET: {
+            char buffer[64] {};
+            auto in_addr = reinterpret_cast<sockaddr_in const *>(address.address_pointer());
+#if _WIN32
+            ULONG size = std::size(buffer);
+            RtlIpv4AddressToStringExA(&in_addr->sin_addr, 0, std::data(buffer), &size);
+#else
+            inet_ntop(AF_INET, &in_addr->sin_addr, std::data(buffer), std::size(buffer));
+#endif
+
+            if (std::uint16_t port = htons(in_addr->sin_port); port) {
+                os << &buffer[0] << ':' << port;
+            } else {
+                os << &buffer[0];
+            }
+
+        } break;
+        case AF_INET6: {
+            char buffer[64] {};
+
+            auto in6_addr = reinterpret_cast<sockaddr_in6 const *>(address.address_pointer());
+#if _WIN32
+            ULONG size = std::size(buffer);
+            RtlIpv6AddressToStringExA(&in6_addr->sin6_addr, 0, 0, std::data(buffer), &size);
+#else
+            inet_ntop(AF_INET6, &in6_addr->sin6_addr, std::data(buffer), std::size(buffer));
+#endif
+
+            if (std::uint16_t port = htons(in6_addr->sin6_port); port) {
+                os << '[' << &buffer[0] << ']' << ':' << port;
+            } else {
+                os << '[' << &buffer[0] << ']';
+            }
+        } break;
+#ifndef _WIN32
+        case AF_UNIX: {
+            auto unix_addr = reinterpret_cast<sockaddr_un const *>(address.address_pointer());
+            os << &unix_addr->sun_path[0];
+        } break;
+#endif
+        default:
+            os << "unknown address family";
+        }
+
+        return os;
+    }
+}

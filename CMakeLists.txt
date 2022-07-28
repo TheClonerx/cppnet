@@ -22,7 +22,7 @@ endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows") # Windows specific
     target_sources(cppnet PRIVATE src/socket_win32_impl.cpp)
-    target_link_libraries(cppnet PUBLIC wsock32 ws2_32)
+    target_link_libraries(cppnet PUBLIC wsock32 ws2_32 ntdll)
 endif()
 
 if(UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows") # Unix specific
