@@ -1,0 +1,10 @@
+BasedOnStyle: WebKit
+---
+Language:           Cpp
+PointerAlignment:   Right
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+NamespaceIndentation: All
+# IndentAccessModifiers: false
+# AccessModifierOffset: 0
+# RequiresClausePosition: OwnLine
