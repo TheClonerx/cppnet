@@ -16,16 +16,16 @@ target_sources(cppnet PRIVATE
 set_target_properties(cppnet PROPERTIES VERSION ${PROJECT_VERSION})
 set_target_properties(cppnet PROPERTIES SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
 
-if(${CMAKE_HOST_SYSTEM_NAME} MATCHES "Linux") # Linux specific
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux") # Linux specific
     target_sources(cppnet PRIVATE src/epoll.cpp)
 endif()
 
-if(WIN32 OR MINGW) # Windows specific
+if(${CMAKE_SYSTEM_NAME} MATCHES "Windows") # Windows specific
     target_sources(cppnet PRIVATE src/socket_win32_impl.cpp)
     target_link_libraries(cppnet PUBLIC wsock32 ws2_32)
 endif()
 
-if(UNIX AND NOT MINGW) # Unix specific
+if(UNIX AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Windows") # Unix specific
     target_sources(cppnet PRIVATE src/socket_unix_impl.cpp)
 endif()
 
