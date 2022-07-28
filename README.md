@@ -1,7 +1,7 @@
 # CPPNET
 ### An easy to use C++ networking library.
 
-This project aims to create an intuitive and easy to use wrappers around the linux system calls
+This project aims to create an intuitive and easy to use wrappers around native API calls.
 
 ## Building
 This will build just the library.
